@@ -1,6 +1,6 @@
 {
   "name": "wwebjs-electron",
-  "version": "1.18.3-1",
+  "version": "1.0.0",
   "description": "Library for interacting with the WhatsApp Web API through electron",
   "main": "./index.js",
   "typings": "./index.d.ts",
@@ -23,7 +23,7 @@
     "client",
     "node"
   ],
-  "author": "Daffa Mumtaz",
+  "author": "Anderson Targino",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/AndyTargino/wwebjs-electron/issues"
