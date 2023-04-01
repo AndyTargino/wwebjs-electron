@@ -17,8 +17,6 @@ const NoAuth = require('./authStrategies/NoAuth');
 /**
  * Starting point for interacting with the WhatsApp Web API
  * @extends {EventEmitter}
- * @param {object} puppeteerBrowser - Puppeteer browser instance
- * @param {object} browserWindow - Electron browser window instance
  * @param {object} options - Client options
  * @param {AuthStrategy} options.authStrategy - Determines how to save and restore sessions. Will use LegacySessionAuth if options.session is set. Otherwise, NoAuth will be used.
  * @param {number} options.authTimeoutMs - Timeout for authentication selector in puppeteer
@@ -54,9 +52,9 @@ class Client extends EventEmitter {
         super();
 
         this.options = Util.mergeDefault(DefaultOptions, options);
-
-        if (!this.options.authStrategy) {
-            if (Object.prototype.hasOwnProperty.call(this.options, 'session')) {
+        
+        if(!this.options.authStrategy) {
+            if(Object.prototype.hasOwnProperty.call(this.options, 'session')) {
                 process.emitWarning(
                     'options.session is deprecated and will be removed in a future release due to incompatibility with multi-device. ' +
                     'Use the LocalAuth authStrategy, don\'t pass in a session as an option, or suppress this warning by using the LegacySessionAuth strategy explicitly (see https://wwebjs.dev/guide/authentication.html#legacysessionauth-strategy).',
@@ -87,19 +85,8 @@ class Client extends EventEmitter {
      * Sets up events and requirements, kicks off authentication request
      */
     async initialize() {
-        // let [browser, page] = [null, null];
 
-        // await this.authStrategy.beforeBrowserInitialized();
-
-        // const puppeteerOpts = this.options.puppeteer;
-        // if (puppeteerOpts && puppeteerOpts.browserWSEndpoint) {
-        //     browser = await puppeteer.connect(puppeteerOpts);
-        //     page = await browser.newPage();
-        // } else {
-        //     browser = await puppeteer.launch(puppeteerOpts);
-        //     page = (await browser.pages())[0];
-        // }
-
+        
         const page = await pie.getPage(this.pupBrowser, this.browserWindow);
         page.setUserAgent(this.options.userAgent);
 
@@ -585,8 +572,8 @@ class Client extends EventEmitter {
      * Closes the client
      */
     async destroy() {
-        // await this.pupBrowser.close();
-        // await this.authStrategy.destroy();
+        await this.pupBrowser.close();
+        await this.authStrategy.destroy();
     }
 
     /**
@@ -691,14 +678,14 @@ class Client extends EventEmitter {
             internalOptions.list = content;
             content = '';
         }
-
+        
         if (internalOptions.sendMediaAsSticker && internalOptions.attachment) {
             internalOptions.attachment = await Util.formatToWebpSticker(
                 internalOptions.attachment, {
-                name: options.stickerName,
-                author: options.stickerAuthor,
-                categories: options.stickerCategories
-            }, this.pupPage
+                    name: options.stickerName,
+                    author: options.stickerAuthor,
+                    categories: options.stickerCategories
+                }, this.pupPage
             );
         }
 
@@ -793,7 +780,7 @@ class Client extends EventEmitter {
      */
     async getInviteInfo(inviteCode) {
         return await this.pupPage.evaluate(inviteCode => {
-            return window.Store.InviteInfo.sendQueryGroupInvite(inviteCode);
+            return window.Store.InviteInfo.queryGroupInvite(inviteCode);
         }, inviteCode);
     }
 
@@ -803,11 +790,11 @@ class Client extends EventEmitter {
      * @returns {Promise<string>} Id of the joined Chat
      */
     async acceptInvite(inviteCode) {
-        const chatId = await this.pupPage.evaluate(async inviteCode => {
-            return await window.Store.Invite.sendJoinGroupViaInvite(inviteCode);
+        const res = await this.pupPage.evaluate(async inviteCode => {
+            return await window.Store.Invite.joinGroupViaInvite(inviteCode);
         }, inviteCode);
 
-        return chatId._serialized;
+        return res.gid._serialized;
     }
 
     /**
@@ -842,9 +829,9 @@ class Client extends EventEmitter {
      */
     async setDisplayName(displayName) {
         const couldSet = await this.pupPage.evaluate(async displayName => {
-            if (!window.Store.Conn.canSetMyPushname()) return false;
+            if(!window.Store.Conn.canSetMyPushname()) return false;
 
-            if (window.Store.MDBackend) {
+            if(window.Store.MDBackend) {
                 // TODO
                 return false;
             } else {
@@ -855,14 +842,14 @@ class Client extends EventEmitter {
 
         return couldSet;
     }
-
+    
     /**
      * Gets the current connection state for the client
      * @returns {WAState} 
      */
     async getState() {
         return await this.pupPage.evaluate(() => {
-            if (!window.Store) return null;
+            if(!window.Store) return null;
             return window.Store.AppState.state;
         });
     }
@@ -956,7 +943,7 @@ class Client extends EventEmitter {
         unmuteDate = unmuteDate ? unmuteDate.getTime() / 1000 : -1;
         await this.pupPage.evaluate(async (chatId, timestamp) => {
             let chat = await window.Store.Chat.get(chatId);
-            await chat.mute.mute(timestamp, !0);
+            await chat.mute.mute({expiration: timestamp, sendDevice:!0});
         }, chatId, unmuteDate || -1);
     }
 
@@ -993,11 +980,11 @@ class Client extends EventEmitter {
                 const chatWid = window.Store.WidFactory.createWid(contactId);
                 return await window.Store.ProfilePic.profilePicFind(chatWid);
             } catch (err) {
-                if (err.name === 'ServerStatusCodeError') return undefined;
+                if(err.name === 'ServerStatusCodeError') return undefined;
                 throw err;
             }
         }, contactId);
-
+        
         return profilePic ? profilePic.eurl : undefined;
     }
 
@@ -1011,8 +998,8 @@ class Client extends EventEmitter {
             let contact = window.Store.Contact.get(contactId);
             if (!contact) {
                 const wid = window.Store.WidFactory.createUserWid(contactId);
-                const chatConstructor = window.Store.Contact.getModelsArray().find(c => !c.isGroup).constructor;
-                contact = new chatConstructor({ id: wid });
+                const chatConstructor = window.Store.Contact.getModelsArray().find(c=>!c.isGroup).constructor;
+                contact = new chatConstructor({id: wid});
             }
 
             if (contact.commonGroups) {
@@ -1114,19 +1101,17 @@ class Client extends EventEmitter {
 
         const createRes = await this.pupPage.evaluate(async (name, participantIds) => {
             const participantWIDs = participantIds.map(p => window.Store.WidFactory.createWid(p));
-            const id = window.Store.MsgKey.newId();
-            const res = await window.Store.GroupUtils.sendCreateGroup(name, participantWIDs, undefined, id);
-            return res;
+            return await window.Store.GroupUtils.createGroup(name, participantWIDs, 0);
         }, name, participants);
 
         const missingParticipants = createRes.participants.reduce(((missing, c) => {
-            const id = Object.keys(c)[0];
-            const statusCode = c[id].code;
+            const id = c.wid._serialized;
+            const statusCode = c.error ? c.error.toString() : '200';
             if (statusCode != 200) return Object.assign(missing, { [id]: statusCode });
             return missing;
         }), {});
 
-        return { gid: createRes.gid, missingParticipants };
+        return { gid: createRes.wid, missingParticipants };
     }
 
     /**

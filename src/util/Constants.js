@@ -46,14 +46,14 @@ exports.Events = {
     MEDIA_UPLOADED: 'media_uploaded',
     GROUP_JOIN: 'group_join',
     GROUP_LEAVE: 'group_leave',
-    GROUP_UPDATE: 'group_update',
     GROUP_ADMIN_CHANGED: 'group_admin_changed',
+    GROUP_UPDATE: 'group_update',
     QR_RECEIVED: 'qr',
     LOADING_SCREEN: 'loading_screen',
     DISCONNECTED: 'disconnected',
     STATE_CHANGED: 'change_state',
     BATTERY_CHANGED: 'change_battery',
-    INCOMING_CALL: 'incoming_call',
+    INCOMING_CALL: 'call',
     REMOTE_SESSION_SAVED: 'remote_session_saved'
 };
 
