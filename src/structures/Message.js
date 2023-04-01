@@ -5,6 +5,7 @@ const MessageMedia = require('./MessageMedia');
 const Location = require('./Location');
 const Order = require('./Order');
 const Payment = require('./Payment');
+const Reaction = require('./Reaction');
 const { MessageTypes } = require('../util/Constants');
 
 /**
@@ -20,13 +21,13 @@ class Message extends Base {
 
     _patch(data) {
         this._data = data;
-        
+
         /**
          * MediaKey that represents the sticker 'ID'
          * @type {string}
          */
         this.mediaKey = data.mediaKey;
-        
+
         /**
          * ID that represents the message
          * @type {object}
@@ -133,6 +134,12 @@ class Message extends Base {
          * @type {boolean}
          */
         this.hasQuotedMsg = data.quotedMsg ? true : false;
+
+        /**
+        * Indicates whether there are reactions to the message
+        * @type {boolean}
+        */
+        this.hasReaction = data.hasReaction ? true : false;
 
         /**
          * Indicates the duration of the message in seconds
@@ -255,12 +262,12 @@ class Message extends Base {
     async reload() {
         const newData = await this.client.pupPage.evaluate((msgId) => {
             const msg = window.Store.Msg.get(msgId);
-            if(!msg) return null;
+            if (!msg) return null;
             return window.WWebJS.getMessageModel(msg);
         }, this.id._serialized);
 
-        if(!newData) return null;
-        
+        if (!newData) return null;
+
         this._patch(newData);
         return this;
     }
@@ -272,7 +279,7 @@ class Message extends Base {
     get rawData() {
         return this._data;
     }
-    
+
     /**
      * Returns the Chat this message was sent in
      * @returns {Promise<Chat>}
@@ -340,10 +347,10 @@ class Message extends Base {
      * @param {string} reaction - Emoji to react with. Send an empty string to remove the reaction.
      * @return {Promise}
      */
-    async react(reaction){
+    async react(reaction) {
         await this.client.pupPage.evaluate(async (messageId, reaction) => {
             if (!messageId) { return undefined; }
-            
+
             const msg = await window.Store.Msg.get(messageId);
             await window.Store.sendReactionToMsg(msg, reaction);
         }, this.id._serialized, reaction);
@@ -419,7 +426,7 @@ class Message extends Base {
                     filesize: msg.size
                 };
             } catch (e) {
-                if(e.status && e.status === 404) return undefined;
+                if (e.status && e.status === 404) return undefined;
                 throw e;
             }
         }, this.id._serialized);
@@ -518,12 +525,50 @@ class Message extends Base {
         if (this.type === MessageTypes.PAYMENT) {
             const msg = await this.client.pupPage.evaluate(async (msgId) => {
                 const msg = window.Store.Msg.get(msgId);
-                if(!msg) return null;
+                if (!msg) return null;
                 return msg.serialize();
             }, this.id._serialized);
             return new Payment(this.client, msg);
         }
         return undefined;
+    }
+
+
+    /**
+     * Reaction List
+     * @typedef {Object} ReactionList
+     * @property {string} id Original emoji
+     * @property {string} aggregateEmoji aggregate emoji
+     * @property {boolean} hasReactionByMe Flag who sent the reaction
+     * @property {Array<Reaction>} senders Reaction senders, to this message
+     */
+
+    /**
+     * Gets the reactions associated with the given message
+     * @return {Promise<ReactionList[]>}
+     */
+    async getReactions() {
+        if (!this.hasReaction) {
+            return undefined;
+        }
+
+        const reactions = await this.client.pupPage.evaluate(async (msgId) => {
+            const msgReactions = await window.Store.Reactions.find(msgId);
+            if (!msgReactions || !msgReactions.reactions.length) return null;
+            return msgReactions.reactions.serialize();
+        }, this.id._serialized);
+
+        if (!reactions) {
+            return undefined;
+        }
+
+        return reactions.map(reaction => {
+            reaction.senders = reaction.senders.map(sender => {
+                sender.timestamp = Math.round(sender.timestamp / 1000);
+                return new Reaction(this.client, sender);
+            });
+            return reaction;
+        });
     }
 }
 
