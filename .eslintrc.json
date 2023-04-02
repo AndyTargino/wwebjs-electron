@@ -17,8 +17,8 @@
     "ignorePatterns": ["docs"],
     "rules": {
         "indent": [
-            "error",
-            4
+            "indent": "off"
+            "error"
         ],
         "linebreak-style": [
             "error",
