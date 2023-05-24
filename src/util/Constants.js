@@ -13,7 +13,8 @@ exports.DefaultOptions = {
     takeoverTimeoutMs: 0,
     userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36',
     ffmpegPath: 'ffmpeg',
-    bypassCSP: false
+    bypassCSP: false,
+    proxyAuthentication: undefined
 };
 
 /**
@@ -36,6 +37,8 @@ exports.Events = {
     AUTHENTICATED: 'authenticated',
     AUTHENTICATION_FAILURE: 'auth_failure',
     READY: 'ready',
+    CHAT_REMOVED: 'chat_removed',
+    CHAT_ARCHIVED: 'chat_archived',
     MESSAGE_RECEIVED: 'message',
     MESSAGE_CREATE: 'message_create',
     MESSAGE_REVOKED_EVERYONE: 'message_revoke_everyone',
@@ -44,6 +47,7 @@ exports.Events = {
     UNREAD_COUNT: 'unread_count',
     MESSAGE_REACTION: 'message_reaction',
     MEDIA_UPLOADED: 'media_uploaded',
+    CONTACT_CHANGED: 'contact_changed',
     GROUP_JOIN: 'group_join',
     GROUP_LEAVE: 'group_leave',
     GROUP_ADMIN_CHANGED: 'group_admin_changed',

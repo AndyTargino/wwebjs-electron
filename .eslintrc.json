@@ -16,7 +16,10 @@
     "plugins": ["mocha"],
     "ignorePatterns": ["docs"],
     "rules": {
-        "indent": "off",
+        "indent": [
+            "error",
+            4
+        ],
         "linebreak-style": [
             "error",
             "unix"
