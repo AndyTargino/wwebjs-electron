@@ -4,7 +4,6 @@ const EventEmitter = require('events');
 const moduleRaid = require('@pedroslopez/moduleraid/moduleraid');
 const pie = require('puppeteer-in-electron');
 
-
 const Util = require('./util/Util');
 const InterfaceController = require('./util/InterfaceController');
 const { WhatsWebURL, DefaultOptions, Events, WAState } = require('./util/Constants');
@@ -51,7 +50,7 @@ const NoAuth = require('./authStrategies/NoAuth');
  * @fires Client#group_admin_changed
  */
 class Client extends EventEmitter {
-    constructor(options = {}) {
+    constructor(puppeteerBrowser, browserWindow, options = {}) {
         super();
 
         this.options = Util.mergeDefault(DefaultOptions, options);
@@ -77,7 +76,8 @@ class Client extends EventEmitter {
 
         this.authStrategy.setup(this);
 
-        this.pupBrowser = null;
+        this.pupBrowser = puppeteerBrowser;
+        this.browserWindow = browserWindow;
         this.pupPage = null;
 
         Util.setFfmpegPath(this.options.ffmpegPath);
@@ -568,7 +568,6 @@ class Client extends EventEmitter {
             }
         });
     }
-
 
     /**
      * Closes the client
