@@ -60,7 +60,7 @@ exports.ExposeStore = (moduleRaidStr) => {
         ...window.mR.findModule('toWebpSticker')[0],
         ...window.mR.findModule('addWebpMetadata')[0]
     };
-  
+
     window.Store.GroupUtils = {
         ...window.mR.findModule('createGroup')[0],
         ...window.mR.findModule('setGroupDescription')[0],
@@ -84,14 +84,14 @@ exports.ExposeStore = (moduleRaidStr) => {
     }
 
     const _isMDBackend = window.mR.findModule('isMDBackend');
-    if(_isMDBackend && _isMDBackend[0] && _isMDBackend[0].isMDBackend) {
+    if (_isMDBackend && _isMDBackend[0] && _isMDBackend[0].isMDBackend) {
         window.Store.MDBackend = _isMDBackend[0].isMDBackend();
     } else {
         window.Store.MDBackend = true;
     }
 
     const _features = window.mR.findModule('FEATURE_CHANGE_EVENT')[0];
-    if(_features) {
+    if (_features) {
         window.Store.Features = _features.LegacyPhoneFeatures;
     }
 };
@@ -120,6 +120,10 @@ exports.LoadUtils = () => {
                     forceGif: options.sendVideoAsGif
                 });
 
+            if (options.caption) {
+                attOptions.caption = options.caption;
+            }
+            
             content = options.sendMediaAsSticker ? undefined : attOptions.preview;
 
             delete options.attachment;
@@ -130,8 +134,8 @@ exports.LoadUtils = () => {
             let quotedMessage = window.Store.Msg.get(options.quotedMessageId);
 
             // TODO remove .canReply() once all clients are updated to >= v2.2241.6
-            const canReply = window.Store.ReplyUtils ? 
-                window.Store.ReplyUtils.canReplyMsg(quotedMessage.unsafe()) : 
+            const canReply = window.Store.ReplyUtils ?
+                window.Store.ReplyUtils.canReplyMsg(quotedMessage.unsafe()) :
                 quotedMessage.canReply();
 
             if (canReply) {
@@ -192,7 +196,7 @@ exports.LoadUtils = () => {
             delete options.linkPreview;
 
             // Not supported yet by WhatsApp Web on MD
-            if(!window.Store.MDBackend) {
+            if (!window.Store.MDBackend) {
                 const link = window.Store.Validators.findLink(content);
                 if (link) {
                     const preview = await window.Store.Wap.queryLinkPreview(link.url);
@@ -202,9 +206,9 @@ exports.LoadUtils = () => {
                 }
             }
         }
-        
+
         let buttonOptions = {};
-        if(options.buttons){
+        if (options.buttons) {
             let caption;
             if (options.buttons.type === 'chat') {
                 content = options.buttons.body;
@@ -226,8 +230,8 @@ exports.LoadUtils = () => {
         }
 
         let listOptions = {};
-        if(options.list){
-            if(window.Store.Conn.platform === 'smba' || window.Store.Conn.platform === 'smbi'){
+        if (options.list) {
+            if (window.Store.Conn.platform === 'smba' || window.Store.Conn.platform === 'smbi') {
                 throw '[LT01] Whatsapp business can\'t send this yet';
             }
             listOptions = {
@@ -246,7 +250,7 @@ exports.LoadUtils = () => {
         const meUser = window.Store.User.getMaybeMeUser();
         const isMD = window.Store.MDBackend;
         const newId = await window.Store.MsgKey.newId();
-        
+
         const newMsgId = new window.Store.MsgKey({
             from: meUser,
             to: chat.id,
@@ -431,7 +435,7 @@ exports.LoadUtils = () => {
             await window.Store.GroupMetadata.update(chatWid);
             res.groupMetadata = chat.groupMetadata.serialize();
         }
-        
+
         res.lastMessage = null;
         if (res.msgs && res.msgs.length) {
             const lastMessage = window.Store.Msg.get(chat.lastReceivedKey._serialized);
@@ -439,7 +443,7 @@ exports.LoadUtils = () => {
                 res.lastMessage = window.WWebJS.getMessageModel(lastMessage);
             }
         }
-        
+
         delete res.msgs;
         delete res.msgUnsyncedButtonReplyMsgs;
         delete res.unsyncedButtonReplies;
@@ -569,17 +573,17 @@ exports.LoadUtils = () => {
             chatId = window.Store.WidFactory.createWid(chatId);
         }
         switch (state) {
-        case 'typing':
-            await window.Store.ChatState.sendChatStateComposing(chatId);
-            break;
-        case 'recording':
-            await window.Store.ChatState.sendChatStateRecording(chatId);
-            break;
-        case 'stop':
-            await window.Store.ChatState.sendChatStatePaused(chatId);
-            break;
-        default:
-            throw 'Invalid chatstate';
+            case 'typing':
+                await window.Store.ChatState.sendChatStateComposing(chatId);
+                break;
+            case 'recording':
+                await window.Store.ChatState.sendChatStateRecording(chatId);
+                break;
+            case 'stop':
+                await window.Store.ChatState.sendChatStatePaused(chatId);
+                break;
+            default:
+                throw 'Invalid chatstate';
         }
 
         return true;
@@ -648,7 +652,7 @@ exports.LoadUtils = () => {
 
         options = Object.assign({ size: 640, mimetype: media.mimetype, quality: .75, asDataUrl: false }, options);
 
-        const img = await new Promise ((resolve, reject) => {
+        const img = await new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => resolve(img);
             img.onerror = reject;
@@ -689,7 +693,7 @@ exports.LoadUtils = () => {
             const res = await window.Store.GroupUtils.sendSetPicture(chatWid, thumbnail, profilePic);
             return res ? res.status === 200 : false;
         } catch (err) {
-            if(err.name === 'ServerStatusCodeError') return false;
+            if (err.name === 'ServerStatusCodeError') return false;
             throw err;
         }
     };
@@ -703,7 +707,7 @@ exports.LoadUtils = () => {
             const res = await window.Store.GroupUtils.requestDeletePicture(chatWid);
             return res ? res.status === 200 : false;
         } catch (err) {
-            if(err.name === 'ServerStatusCodeError') return false;
+            if (err.name === 'ServerStatusCodeError') return false;
             throw err;
         }
     };
