@@ -28,7 +28,7 @@ class GroupChat extends Chat {
     get owner() {
         return this.groupMetadata.owner;
     }
-    
+
     /**
      * Gets the date at which the group was created
      * @type {date}
@@ -134,12 +134,12 @@ class GroupChat extends Chat {
                 await window.Store.GroupUtils.setGroupSubject(chatWid, subject);
                 return true;
             } catch (err) {
-                if(err.name === 'ServerStatusCodeError') return false;
+                if (err.name === 'ServerStatusCodeError') return false;
                 throw err;
             }
         }, this.id._serialized, subject);
 
-        if(!success) return false;
+        if (!success) return false;
         this.name = subject;
         return true;
     }
@@ -154,37 +154,37 @@ class GroupChat extends Chat {
             const chatWid = window.Store.WidFactory.createWid(chatId);
             let descId = window.Store.GroupMetadata.get(chatWid).descId;
             try {
-                await window.Store.GroupUtils.setGroupDescription(chatWid, description, window.Store.MsgKey.newId(), descId);
+                await window.Store.GroupUtils.setGroupDescription(chatWid, description, newId, descId);
                 return true;
             } catch (err) {
-                if(err.name === 'ServerStatusCodeError') return false;
+                if (err.name === 'ServerStatusCodeError') return false;
                 throw err;
             }
         }, this.id._serialized, description);
 
-        if(!success) return false;
+        if (!success) return false;
         this.groupMetadata.desc = description;
         return true;
     }
-    
+
     /**
      * Updates the group settings to only allow admins to send messages.
      * @param {boolean} [adminsOnly=true] Enable or disable this option 
      * @returns {Promise<boolean>} Returns true if the setting was properly updated. This can return false if the user does not have the necessary permissions.
      */
-    async setMessagesAdminsOnly(adminsOnly=true) {
+    async setMessagesAdminsOnly(adminsOnly = true) {
         const success = await this.client.pupPage.evaluate(async (chatId, adminsOnly) => {
             const chatWid = window.Store.WidFactory.createWid(chatId);
             try {
                 await window.Store.GroupUtils.setGroupProperty(chatWid, 'announcement', adminsOnly ? 1 : 0);
                 return true;
             } catch (err) {
-                if(err.name === 'ServerStatusCodeError') return false;
+                if (err.name === 'ServerStatusCodeError') return false;
                 throw err;
             }
         }, this.id._serialized, adminsOnly);
 
-        if(!success) return false;
+        if (!success) return false;
 
         this.groupMetadata.announce = adminsOnly;
         return true;
@@ -195,20 +195,20 @@ class GroupChat extends Chat {
      * @param {boolean} [adminsOnly=true] Enable or disable this option 
      * @returns {Promise<boolean>} Returns true if the setting was properly updated. This can return false if the user does not have the necessary permissions.
      */
-    async setInfoAdminsOnly(adminsOnly=true) {
+    async setInfoAdminsOnly(adminsOnly = true) {
         const success = await this.client.pupPage.evaluate(async (chatId, adminsOnly) => {
             const chatWid = window.Store.WidFactory.createWid(chatId);
             try {
                 await window.Store.GroupUtils.setGroupProperty(chatWid, 'restrict', adminsOnly ? 1 : 0);
                 return true;
             } catch (err) {
-                if(err.name === 'ServerStatusCodeError') return false;
+                if (err.name === 'ServerStatusCodeError') return false;
                 throw err;
             }
         }, this.id._serialized, adminsOnly);
 
-        if(!success) return false;
-        
+        if (!success) return false;
+
         this.groupMetadata.restrict = adminsOnly;
         return true;
     }
@@ -250,7 +250,7 @@ class GroupChat extends Chat {
 
         return codeRes.code;
     }
-    
+
     /**
      * Invalidates the current group invite code and generates a new one
      * @returns {Promise<string>} New invite code
