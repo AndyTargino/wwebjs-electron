@@ -1,15 +1,9 @@
 # PR Details
 
 <!--- Provide a general summary of your changes in the Title above -->
-Fix bugs:
- - r.findImpl is not a function
- - ready event doesn't work
 
 ## Description
 
-It was not possible to send messages to new conversations by accounts whatsapp business returned this error: "r.findImpl is not a function"
-
-The ready event was not working making it impossible to send messages
 <!--- Describe your changes in detail -->
 
 ## Related Issue
@@ -32,7 +26,7 @@ The ready event was not working making it impossible to send messages
 <!--- What types of changes does your code introduce? Put an `x` in all the boxes that apply: -->
 
 - [ ] Dependency change
-- [x] Bug fix (non-breaking change which fixes an issue)
+- [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to change)
 
@@ -40,8 +34,8 @@ The ready event was not working making it impossible to send messages
 
 <!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
 
-- [x] My code follows the code style of this project.
-- [x] I have updated the documentation accordingly (index.d.ts).
+- [ ] My code follows the code style of this project.
+- [ ] I have updated the documentation accordingly (index.d.ts).
 
 
 
