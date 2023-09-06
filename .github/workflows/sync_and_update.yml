@@ -3,6 +3,7 @@ name: Atualizar a partir de whatsapp-web.js
 on:
   schedule:
     - cron: '0 0 * * *' # isso irá rodar todos os dias às 00:00
+  workflow_dispatch:
 
 jobs:
   update:
