@@ -73,9 +73,9 @@ jobs:
       run: |
           echo $GH_TOKEN | gh auth login --with-token
           PR_ID=$(gh pr create --base main --head temp-sync-branch --title "Synchronized with upstream and applied custom changes" --body "This PR includes the latest changes from the upstream and our custom changes." | grep -oP 'github.com/.+/pull/\K\d+')
-          gh pr merge $PR_ID --auto --merge "Synchronized with upstream and applied custom changes"
+          gh pr merge $PR_ID --auto --merge "Synchronized with upstream and applied custom changes" --confirm
       env:
-          GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+            GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
     - name: Criar release
       run: |
