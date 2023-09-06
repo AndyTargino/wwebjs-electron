@@ -15,7 +15,6 @@ jobs:
         with:
           repository: pedroslopez/whatsapp-web.js
           token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
-      
 
       - name: Fetch Upstream Changes
         run: |
