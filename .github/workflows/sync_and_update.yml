@@ -45,11 +45,11 @@ jobs:
 
           # Aplicar as substituições no arquivo Client.js
           FILE_PATH="src/Client.js"
-          sed -i 's|const puppeteer = require('"'"'puppeteer'"'"');|const pie = require('"'"'puppeteer-in-electron'"'"');|g' $FILE_PATH
-          sed -i 's|constructor(options = {})|constructor(puppeteerBrowser, browserWindow, options = {})|' $FILE_PATH
-          sed -i 's|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\n        this.browserWindow = browserWindow;|' $FILE_PATH
-          sed -i '/let \[browser, page\] = \[null, null\];/,/await page.authenticate(this.options.proxyAuthentication);/c\        const page = await pie.getPage(this.pupBrowser, this.browserWindow);\n        page.setUserAgent(this.options.userAgent);' $FILE_PATH
-          sed -i '/this.pupBrowser = browser;/d' $FILE_PATH
+          sed -i "s|const puppeteer = require('puppeteer');|const pie = require('puppeteer-in-electron');|" $FILE_PATH
+          sed -i "s|constructor(options = {}) {|constructor(puppeteerBrowser, browserWindow, options = {}) {|" $FILE_PATH
+          sed -i "s|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\nthis.browserWindow = browserWindow;|" $FILE_PATH
+          sed -i "/let \[browser, page\] = \[null, null\];/,/await page.authenticate(this.options.proxyAuthentication);/c const page = await pie.getPage(this.pupBrowser, this.browserWindow);\npage.setUserAgent(this.options.userAgent);" $FILE_PATH
+          sed -i "/this.pupBrowser = browser;/d" $FILE_PATH
           echo "Modificações aplicadas no arquivo Client.js."
 
       - name: Commit e Push
