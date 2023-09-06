@@ -6,9 +6,7 @@ class WebCache {
     async persist() { }
 }
 
-
 class VersionResolveError extends Error { }
-
 
 module.exports = {
     WebCache,
