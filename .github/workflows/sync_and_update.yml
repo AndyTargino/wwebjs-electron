@@ -33,10 +33,10 @@ jobs:
       run: |
          git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
 
-         - name: Aplicar modificações
-         run: |
+    - name: Aplicar modificações
+      run: |
            # Atualizar `package.json`
-           PACKAGE_VERSION=$(jq -r .version temp-whatsapp-web.js/package.json)
+           PACKAGE_VERSION=$(jq -r .version whatsapp-web.js/package.json)
            echo "A última versão do projeto base é: $PACKAGE_VERSION"
            jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
  
@@ -56,8 +56,8 @@ jobs:
  
     - name: Copiar arquivos e remover diretório temporário
       run: |
-          rsync -a --exclude '.git/' temp-whatsapp-web.js/ ./  # Copia os arquivos, excluindo a pasta .git
-          rm -rf temp-whatsapp-web.js  # Remove o diretório temporário
+          rsync -a --exclude '.git/' whatsapp-web.js/ ./  # Copia os arquivos, excluindo a pasta .git
+          rm -rf whatsapp-web.js  # Remove o diretório temporário
 
     - name: Commit e Push
       run: |
