@@ -33,5 +33,15 @@
             "always"
         ],
         "no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": false }]
-    }
+    },
+    "overrides": [
+        {
+            "files": ["src/Client.js", "src/structures/GroupChat.js"],
+            "rules": {
+                "no-unused-vars": "off",
+                "indent": "off",
+                "no-undef": "off"
+            }
+        }
+    ]
 }
