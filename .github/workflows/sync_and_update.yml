@@ -29,10 +29,11 @@ jobs:
 
       - name: Reset and Update from Upstream
         run: |
-            git checkout main
-            git reset --hard upstream/main
-            git checkout HEAD README.md        # Restores the README.md
-            git checkout HEAD .github/         # Restores the .github folder
+          git checkout main
+          git reset --hard upstream/main
+          git checkout HEAD README.md        # Restores the README.md
+          git checkout HEAD .github/         # Restores the .github folder
+          git checkout HEAD .eslintrc.json   # Restores the .eslintrc.json
 
       - name: Replace puppeteer dependency with puppeteer-in-electron
         run: |
@@ -53,4 +54,4 @@ jobs:
           git add .
           git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
           git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
-          git push
+          git push --force
