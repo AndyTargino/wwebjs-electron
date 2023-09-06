@@ -10,6 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout wwebjs-electron
+        uses: actions/checkout@v2
+        with:
+          repository: AndyTargino/wwebjs-electron
+          fetch-depth: 0
+
+      - name: Criação da nova branch
+        run: |
+          git checkout -b temp-sync-branch
+
       - name: Obter a última versão da release do projeto base
         id: latest_version
         run: |
@@ -19,25 +29,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout a versão mais recente do projeto base
-        uses: actions/checkout@v2
-        with:
-          repository: pedroslopez/whatsapp-web.js
-          ref: ${{ steps.latest_version.outputs.version }}
-          fetch-depth: 0
-          
-      - name: Criar e mudar para uma nova branch
+      - name: Clonar e copiar arquivos do whatsapp-web.js
         run: |
-          git checkout -b sync_branch_${{ steps.latest_version.outputs.version }}
+          git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
+          cp whatsapp-web.js/README.md ./README.md
+          cp -r whatsapp-web.js/.github/ ./.github/
+          cp whatsapp-web.js/.eslintrc.json ./.eslintrc.json
 
       - name: Aplicar modificações
         run: |
-          # Restaurar arquivos específicos do seu repositório
-          git checkout ${{ github.sha }} -- README.md .github/ .eslintrc.json
-          echo "Arquivos específicos restaurados."
-
           # Atualizar `package.json`
-          PACKAGE_VERSION=$(jq -r .version package.json)
+          PACKAGE_VERSION=$(jq -r .version whatsapp-web.js/package.json)
           echo "A última versão do projeto base é: $PACKAGE_VERSION"
           jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
 
@@ -50,19 +52,12 @@ jobs:
           sed -i '/this.pupBrowser = browser;/d' $FILE_PATH
           echo "Modificações aplicadas no arquivo Client.js."
 
-      - name: Commit e Push na nova branch
+      - name: Commit e Push
         run: |
           git config user.email "andytargino@outlook.com"
           git config user.name "AndyTargino"
           git add .
           git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
           git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
-          git push --set-upstream origin sync_branch_${{ steps.latest_version.outputs.version }}
-          echo "Mudanças commitadas e enviadas na nova branch."
-
-      - name: Merge na main e Push
-        run: |
-          git checkout main
-          git merge sync_branch_${{ steps.latest_version.outputs.version }}
-          git push
-          echo "Merge realizado na main."
+          git push --set-upstream origin temp-sync-branch
+          echo "Mudanças commitadas e enviadas."
