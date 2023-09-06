@@ -49,7 +49,7 @@ jobs:
            sed -i "s|const puppeteer = require('puppeteer');|const pie = require('puppeteer-in-electron');|" $FILE_PATH
            sed -i "s|constructor(options = {}) {|constructor(puppeteerBrowser, browserWindow, options = {}) {|" $FILE_PATH
            sed -i "s|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\nthis.browserWindow = browserWindow;|" $FILE_PATH
-           sed -i "/let \[browser, page\] = \[null, null\];/,/await page.authenticate(this.options.proxyAuthentication);/c const page = await pie.getPage(this.pupBrowser, this.browserWindow);" $FILE_PATH
+           sed -i "/let \[browser, page\] = \[null, null\];/,/this.pupPage = page;/c const page = await pie.getPage(this.pupBrowser, this.browserWindow);\npage.setUserAgent(this.options.userAgent);\n\nawait page.setUserAgent(this.options.userAgent);\nif (this.options.bypassCSP) await page.setBypassCSP(true);\n\nthis.pupPage = page;" $FILE_PATH
            sed -i "/this.pupBrowser = browser;/d" $FILE_PATH
  
            # Imprimir o conteúdo do arquivo modificado
