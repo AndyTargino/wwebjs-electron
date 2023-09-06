@@ -38,7 +38,7 @@ jobs:
           git checkout HEAD -- package.json .eslintrc.json README.md .github/
           
           # Modificar src/Client.js
-          sed -i 's|const puppeteer = require('puppeteer');|const pie = require('puppeteer-in-electron');|g' src/Client.js
+          sed -i 's|const puppeteer = require('\''puppeteer'\'');|const pie = require('\''puppeteer-in-electron'\'');|g' src/Client.js
           sed -i 's|constructor(options = {}) {|constructor(puppeteerBrowser, browserWindow, options = {}) {|g' src/Client.js
           sed -i 's|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\nthis.browserWindow = browserWindow;|g' src/Client.js
           sed -i 's|let \[browser, page\] = \[null, null\];\n.*browser.pages\)\[0\];|const page = await pie.getPage(this.pupBrowser, this.browserWindow);\n        page.setUserAgent(this.options.userAgent);|gs' src/Client.js
