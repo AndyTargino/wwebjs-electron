@@ -17,19 +17,17 @@ jobs:
           echo "::set-output name=version::$LATEST_VERSION"
           echo "Última versão da release obtida: $LATEST_VERSION"
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Checkout a versão mais recente do projeto base
         uses: actions/checkout@v2
         with:
           repository: pedroslopez/whatsapp-web.js
           ref: ${{ steps.latest_version.outputs.version }}
-        continue-on-error: true
 
-      - name: Fetch all branches and tags
+      - name: Criar e mudar para uma nova branch
         run: |
-          git fetch --all
-          echo "Todo o histórico foi buscado."
+          git checkout -b sync_branch_${{ steps.latest_version.outputs.version }}
 
       - name: Aplicar modificações
         run: |
@@ -51,12 +49,19 @@ jobs:
           sed -i '/this.pupBrowser = browser;/d' $FILE_PATH
           echo "Modificações aplicadas no arquivo Client.js."
 
-      - name: Commit e Push
+      - name: Commit e Push na nova branch
         run: |
           git config user.email "andytargino@outlook.com"
           git config user.name "AndyTargino"
           git add .
           git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
           git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
-          git push --force
-          echo "Mudanças commitadas e enviadas."
+          git push --set-upstream origin sync_branch_${{ steps.latest_version.outputs.version }}
+          echo "Mudanças commitadas e enviadas na nova branch."
+
+      - name: Merge na main e Push
+        run: |
+          git checkout main
+          git merge sync_branch_${{ steps.latest_version.outputs.version }}
+          git push
+          echo "Merge realizado na main."
