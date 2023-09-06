@@ -36,7 +36,6 @@ jobs:
         run: |
           git clone https://github.com/pedroslopez/whatsapp-web.js.git temp-whatsapp-web.js
           rsync -a --exclude '.git/' temp-whatsapp-web.js/ ./  # Copia os arquivos, excluindo a pasta .git
-          rm -rf temp-whatsapp-web.js  # Remove o diretório temporário
 
       - name: Aplicar modificações
         run: |
@@ -44,7 +43,8 @@ jobs:
           PACKAGE_VERSION=$(jq -r .version temp-whatsapp-web.js/package.json)
           echo "A última versão do projeto base é: $PACKAGE_VERSION"
           jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
-
+          rm -rf temp-whatsapp-web.js  # Remove o diretório temporário
+          
           # Aplicar as substituições no arquivo Client.js
           FILE_PATH="src/Client.js"
           sed -i "s|const puppeteer = require('puppeteer');|const pie = require('puppeteer-in-electron');|" $FILE_PATH
