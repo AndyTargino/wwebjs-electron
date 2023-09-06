@@ -20,12 +20,13 @@ jobs:
 
       - name: Configure Git User
         run: |
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
+          git config user.email "andytargino@outlook.com"
+          git config user.name "AndyTargino"
 
-      - name: Merge changes excluding README and .github
+      - name: Reset and Update from Upstream
         run: |
-            git merge upstream/main --strategy-option=theirs --allow-unrelated-histories
+            git checkout main
+            git reset --hard upstream/main
             git checkout HEAD README.md        # Restores the README.md
             git checkout HEAD .github/         # Restores the .github folder
 

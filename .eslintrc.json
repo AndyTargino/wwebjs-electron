@@ -5,7 +5,10 @@
         "es6": true,
         "node": true
     },
-    "extends": ["eslint:recommended", "plugin:mocha/recommended"],
+    "extends": [
+        "eslint:recommended",
+        "plugin:mocha/recommended"
+    ],
     "globals": {
         "Atomics": "readonly",
         "SharedArrayBuffer": "readonly"
@@ -13,8 +16,12 @@
     "parserOptions": {
         "ecmaVersion": 2020
     },
-    "plugins": ["mocha"],
-    "ignorePatterns": ["docs"],
+    "plugins": [
+        "mocha"
+    ],
+    "ignorePatterns": [
+        "docs"
+    ],
     "rules": {
         "indent": [
             "error",
@@ -26,17 +33,31 @@
         ],
         "quotes": [
             "error",
-            "single"
+            "single",
+            {
+                "avoidEscape": true,
+                "allowTemplateLiterals": true
+            }
         ],
         "semi": [
             "error",
             "always"
         ],
-        "no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": false }]
+        "no-unused-vars": [
+            "error",
+            {
+                "vars": "all",
+                "args": "after-used",
+                "ignoreRestSiblings": false
+            }
+        ]
     },
     "overrides": [
         {
-            "files": ["src/Client.js", "src/structures/GroupChat.js"],
+            "files": [
+                "src/Client.js",
+                "src/structures/GroupChat.js"
+            ],
             "rules": {
                 "no-unused-vars": "off",
                 "indent": "off",
