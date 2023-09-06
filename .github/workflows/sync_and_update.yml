@@ -24,7 +24,8 @@ jobs:
         with:
           repository: pedroslopez/whatsapp-web.js
           ref: ${{ steps.latest_version.outputs.version }}
-
+          fetch-depth: 0
+          
       - name: Criar e mudar para uma nova branch
         run: |
           git checkout -b sync_branch_${{ steps.latest_version.outputs.version }}
