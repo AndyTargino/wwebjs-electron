@@ -1,0 +1,47 @@
+name: Sync and Update
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Executa a cada hora
+  workflow_dispatch: # Permite a execução manual através da UI do GitHub
+
+jobs:
+  sync_and_update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code from secondary project
+        uses: actions/checkout@v2
+
+      - name: Fetch Upstream Changes
+        run: |
+          git remote add upstream https://github.com/pedroslopez/whatsapp-web.js
+          git fetch upstream
+
+      - name: Merge changes excluding README and .github
+        run: |
+          git merge upstream/main --strategy-option=theirs
+          git checkout HEAD README.md        # Restores the README.md
+          git checkout HEAD .github/         # Restores the .github folder
+
+      - name: Update package.json dependency version
+        run: |
+          PACKAGE_VERSION=$(curl -s https://raw.githubusercontent.com/pedroslopez/whatsapp-web.js/main/package.json | jq '.dependencies["puppeteer"]')
+          jq '.dependencies["puppeteer"] = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
+
+      - name: Make Code Substitutions in Client.js
+        run: |
+          FILE_PATH="src/Client.js"
+          sed -i 's|const puppeteer = require('"'"'puppeteer'"'"');|const pie = require('"'"'puppeteer-in-electron'"'"');|g' $FILE_PATH
+          sed -i 's|constructor(options = {})|constructor(puppeteerBrowser, browserWindow, options = {})|' $FILE_PATH
+          sed -i 's|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\n        this.browserWindow = browserWindow;|' $FILE_PATH
+          sed -i '/let \[browser, page\] = \[null, null\];/,/await page.authenticate(this.options.proxyAuthentication);/c\        const page = await pie.getPage(this.pupBrowser, this.browserWindow);\n        page.setUserAgent(this.options.userAgent);' $FILE_PATH
+          sed -i '/this.pupBrowser = browser;/d' $FILE_PATH
+
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
+          git push
