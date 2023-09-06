@@ -18,16 +18,21 @@ jobs:
           git remote add upstream https://github.com/pedroslopez/whatsapp-web.js
           git fetch upstream
 
+      - name: Configure Git User
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+
       - name: Merge changes excluding README and .github
         run: |
             git merge upstream/main --strategy-option=theirs --allow-unrelated-histories
             git checkout HEAD README.md        # Restores the README.md
             git checkout HEAD .github/         # Restores the .github folder
-  
-      - name: Fetch Latest Puppeteer Version from Project Base
+
+      - name: Replace puppeteer dependency with puppeteer-in-electron
         run: |
-          PACKAGE_VERSION=$(curl -s https://raw.githubusercontent.com/pedroslopez/whatsapp-web.js/main/package.json | jq -r '.dependencies["puppeteer"]')
-          jq '.dependencies["puppeteer"] = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
+          jq '.dependencies["puppeteer-in-electron"] = "^3.0.5"' package.json > temp.json && mv temp.json package.json
+          jq 'del(.dependencies["puppeteer"])' package.json > temp2.json && mv temp2.json package.json
 
       - name: Make Code Substitutions in Client.js
         run: |
@@ -40,8 +45,6 @@ jobs:
 
       - name: Commit and Push
         run: |
-          git config --local user.email "andytargino@outlook.com"
-          git config --local user.name "AndyTargino"
           git add .
           git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
           git push
