@@ -10,37 +10,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code from secondary project
+      - name: Obter a última versão da release do projeto base
+        id: latest_version
+        run: |
+          LATEST_VERSION=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/releases/latest" | jq -r .tag_name)
+          echo "::set-output name=version::$LATEST_VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout a versão mais recente do projeto base
         uses: actions/checkout@v2
         with:
           repository: pedroslopez/whatsapp-web.js
-          token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          ref: ${{ steps.latest_version.outputs.version }}
 
-      - name: Fetch Upstream Changes
+      - name: Aplicar modificações
         run: |
-          git remote add upstream https://github.com/pedroslopez/whatsapp-web.js
-          git fetch upstream
+          # Restaurar arquivos específicos do seu repositório
+          git checkout ${{ github.sha }} -- README.md .github/ .eslintrc.json
 
-      - name: Configure Git User
-        run: |
-          git config user.email "andytargino@outlook.com"
-          git config user.name "AndyTargino"
+          # Atualizar `package.json`
+          PACKAGE_VERSION=$(jq -r .version package.json)
+          echo "A última versão do projeto base é: $PACKAGE_VERSION"
+          jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
 
-      - name: Reset and Update from Upstream
-        run: |
-          git checkout main
-          git reset --hard upstream/main
-          git checkout HEAD README.md        # Restores the README.md
-          git checkout HEAD .github/         # Restores the .github folder
-          git checkout HEAD .eslintrc.json   # Restores the .eslintrc.json
-
-      - name: Replace puppeteer dependency with puppeteer-in-electron
-        run: |
-          jq '.dependencies["puppeteer-in-electron"] = "^3.0.5"' package.json > temp.json && mv temp.json package.json
-          jq 'del(.dependencies["puppeteer"])' package.json > temp2.json && mv temp2.json package.json
-
-      - name: Make Code Substitutions in Client.js
-        run: |
+          # Aplicar as substituições no arquivo Client.js
           FILE_PATH="src/Client.js"
           sed -i 's|const puppeteer = require('"'"'puppeteer'"'"');|const pie = require('"'"'puppeteer-in-electron'"'"');|g' $FILE_PATH
           sed -i 's|constructor(options = {})|constructor(puppeteerBrowser, browserWindow, options = {})|' $FILE_PATH
@@ -48,8 +42,10 @@ jobs:
           sed -i '/let \[browser, page\] = \[null, null\];/,/await page.authenticate(this.options.proxyAuthentication);/c\        const page = await pie.getPage(this.pupBrowser, this.browserWindow);\n        page.setUserAgent(this.options.userAgent);' $FILE_PATH
           sed -i '/this.pupBrowser = browser;/d' $FILE_PATH
 
-      - name: Commit and Push
+      - name: Commit e Push
         run: |
+          git config user.email "andytargino@outlook.com"
+          git config user.name "AndyTargino"
           git add .
           git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
           git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
