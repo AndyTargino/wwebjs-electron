@@ -32,10 +32,9 @@ jobs:
           BRANCH_NAME="clone-whatsapp-web.js-${{ steps.latest_version_and_date.outputs.version }}"
           git checkout -b $BRANCH_NAME
 
-      - name: Clonar e copiar arquivos do whatsapp-web.js
+      - name: Clonar whatsapp-web.js
         run: |
           git clone https://github.com/pedroslopez/whatsapp-web.js.git temp-whatsapp-web.js
-          rsync -a --exclude '.git/' temp-whatsapp-web.js/ ./  # Copia os arquivos, excluindo a pasta .git
 
       - name: Aplicar modificações
         run: |
@@ -43,8 +42,7 @@ jobs:
           PACKAGE_VERSION=$(jq -r .version temp-whatsapp-web.js/package.json)
           echo "A última versão do projeto base é: $PACKAGE_VERSION"
           jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
-          rm -rf temp-whatsapp-web.js  # Remove o diretório temporário
-          
+
           # Aplicar as substituições no arquivo Client.js
           FILE_PATH="src/Client.js"
           sed -i "s|const puppeteer = require('puppeteer');|const pie = require('puppeteer-in-electron');|" $FILE_PATH
@@ -58,6 +56,11 @@ jobs:
           cat $FILE_PATH
           echo "-------------------------------------------------------"
           echo "Modificações aplicadas no arquivo Client.js."
+
+      - name: Copiar arquivos e remover diretório temporário
+        run: |
+          rsync -a --exclude '.git/' temp-whatsapp-web.js/ ./  # Copia os arquivos, excluindo a pasta .git
+          rm -rf temp-whatsapp-web.js  # Remove o diretório temporário
 
       - name: Commit e Push
         run: |
