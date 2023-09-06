@@ -53,10 +53,10 @@ jobs:
            cat $FILE_PATH
            echo "-------------------------------------------------------"
            echo "Modificações aplicadas no arquivo Client.js."
- 
+
     - name: Copiar arquivos e remover diretório temporário
       run: |
-          rsync -a --exclude '.git/' whatsapp-web.js/ ./  # Copia os arquivos, excluindo a pasta .git
+          rsync -a --exclude '.git/' --exclude 'README.md' --exclude '.eslintrc.json' --exclude '.github/' whatsapp-web.js/ ./  # Copia os arquivos com exclusões específicas
           rm -rf whatsapp-web.js  # Remove o diretório temporário
 
     - name: Commit e Push
@@ -68,7 +68,7 @@ jobs:
           git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
           git push --set-upstream origin temp-sync-branch
           echo "Mudanças commitadas e enviadas."
-   
+
     - name: Criar e mesclar Pull Request
       run: |
           echo $GH_TOKEN | gh auth login --with-token
@@ -76,7 +76,7 @@ jobs:
           gh pr merge $PR_ID --auto --merge "Synchronized with upstream and applied custom changes"
       env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
-   
+
     - name: Criar release
       run: |
            echo $GH_TOKEN | gh auth login --with-token
@@ -84,7 +84,7 @@ jobs:
            gh release create $VERSION
       env:
            GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
-   
+
     - name: Excluir branch temporária
       run: |
            git push origin --delete temp-sync-branch
