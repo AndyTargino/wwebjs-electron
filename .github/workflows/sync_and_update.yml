@@ -34,7 +34,9 @@ jobs:
 
       - name: Clonar e copiar arquivos do whatsapp-web.js
         run: |
-          git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
+          git clone https://github.com/pedroslopez/whatsapp-web.js.git temp-whatsapp-web.js
+          rsync -a --exclude '.git/' temp-whatsapp-web.js/ ./  # Copia os arquivos, excluindo a pasta .git
+          rm -rf temp-whatsapp-web.js  # Remove o diretório temporário
 
       - name: Aplicar modificações
         run: |
