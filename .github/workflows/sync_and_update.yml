@@ -19,38 +19,28 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Checkout a versão mais recente do projeto base
+      - name: Checkout da branch main
         uses: actions/checkout@v2
         with:
-          repository: pedroslopez/whatsapp-web.js
-          ref: ${{ steps.latest_version.outputs.version }}
-        continue-on-error: true
+          repository: AndyTargino/wwebjs-electron
+          ref: main
+          fetch-depth: 0
 
-      - name: Buscar todo o histórico
+      - name: Criar e fazer checkout para uma nova branch
         run: |
-          git fetch --all
-          echo "Todo o histórico foi buscado."
+          BRANCH_NAME=update-$(date +'%Y%m%d%H%M%S')
+          git checkout -b $BRANCH_NAME
 
       - name: Aplicar modificações
         run: |
           # Restaurar arquivos específicos do seu repositório
-          git checkout ${{ github.sha }} -- README.md .github/ .eslintrc.json
-          echo "Arquivos específicos restaurados."
+          git checkout 61e146ef67126ba320f7d97aae2d6189e066fd9c -- README.md .github/ .eslintrc.json
+          # ... (resto do código com suas modificações)
 
-          # Atualizar `package.json`
-          PACKAGE_VERSION=$(jq -r .version package.json)
-          echo "A última versão do projeto base é: $PACKAGE_VERSION"
-          jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
-          echo "Versão de package.json atualizada."
-
-          # Aplicar as substituições no arquivo Client.js
-          FILE_PATH="src/Client.js"
-          sed -i 's|const puppeteer = require('"'"'puppeteer'"'"');|const pie = require('"'"'puppeteer-in-electron'"'"');|g' $FILE_PATH
-          sed -i 's|constructor(options = {})|constructor(puppeteerBrowser, browserWindow, options = {})|' $FILE_PATH
-          sed -i 's|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\n        this.browserWindow = browserWindow;|' $FILE_PATH
-          sed -i '/let \[browser, page\] = \[null, null\];/,/await page.authenticate(this.options.proxyAuthentication);/c\        const page = await pie.getPage(this.pupBrowser, this.browserWindow);\n        page.setUserAgent(this.options.userAgent);' $FILE_PATH
-          sed -i '/this.pupBrowser = browser;/d' $FILE_PATH
-          echo "Modificações aplicadas no arquivo Client.js."
+      - name: Fazer checkout para main e merge da nova branch
+        run: |
+          git checkout main
+          git merge --no-ff --allow-unrelated-histories -m "Merging updates" $BRANCH_NAME
 
       - name: Commit e Push
         run: |
