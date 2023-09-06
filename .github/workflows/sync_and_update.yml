@@ -27,7 +27,7 @@ jobs:
           echo "::set-output name=version::$LATEST_VERSION"
           echo "Última versão da release obtida: $LATEST_VERSION"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
       - name: Clonar e copiar arquivos do whatsapp-web.js
         run: |
