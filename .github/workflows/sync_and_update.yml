@@ -31,10 +31,7 @@ jobs:
 
       - name: Clonar e copiar arquivos do whatsapp-web.js
         run: |
-          git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
-          cp whatsapp-web.js/README.md ./README.md
-          cp -r whatsapp-web.js/.github/ ./.github/
-          cp whatsapp-web.js/.eslintrc.json ./.eslintrc.json
+           git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
 
       - name: Aplicar modificações
         run: |
