@@ -16,44 +16,46 @@ jobs:
           repository: AndyTargino/wwebjs-electron
           fetch-depth: 0
 
-      - name: Criação da nova branch
-        run: |
-          git checkout -b temp-sync-branch
-
-      - name: Obter a última versão da release do projeto base
-        id: latest_version
+      - name: Obter a última versão da release e data de criação do projeto base
+        id: latest_version_and_date
         run: |
           LATEST_VERSION=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/releases/latest" | jq -r .tag_name)
+          CREATED_AT=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/releases/latest" | jq -r .created_at | cut -d'T' -f1)
           echo "::set-output name=version::$LATEST_VERSION"
-          echo "Última versão da release obtida: $LATEST_VERSION"
+          echo "::set-output name=date::$CREATED_AT"
+          echo "Última versão da release obtida: $LATEST_VERSION, Data de Criação: $CREATED_AT"
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
+      - name: Criação da nova branch
+        run: |
+          BRANCH_NAME="clone-whatsapp-web.js-${{ steps.latest_version_and_date.outputs.version }}"
+          git checkout -b $BRANCH_NAME
+
       - name: Clonar e copiar arquivos do whatsapp-web.js
         run: |
-           git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
+          git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
 
       - name: Aplicar modificações
         run: |
-           # Atualizar `package.json`
-           PACKAGE_VERSION=$(jq -r .version whatsapp-web.js/package.json)
-           echo "A última versão do projeto base é: $PACKAGE_VERSION"
-           jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
-       
-           # Aplicar as substituições no arquivo Client.js
-           FILE_PATH="src/Client.js"
-           sed -i "s|const puppeteer = require('puppeteer');|const pie = require('puppeteer-in-electron');|" $FILE_PATH
-           sed -i "s|constructor(options = {}) {|constructor(puppeteerBrowser, browserWindow, options = {}) {|" $FILE_PATH
-           sed -i "s|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\nthis.browserWindow = browserWindow;|" $FILE_PATH
-           sed -i "/let \[browser, page\] = \[null, null\];/,/await page.authenticate(this.options.proxyAuthentication);/c const page = await pie.getPage(this.pupBrowser, this.browserWindow);\npage.setUserAgent(this.options.userAgent);" $FILE_PATH
-           sed -i "/this.pupBrowser = browser;/d" $FILE_PATH
-       
-           # Imprimir o conteúdo do arquivo modificado
-           echo "------------ CONTEÚDO DO ARQUIVO MODIFICADO ------------"
-           cat $FILE_PATH
-           echo "-------------------------------------------------------"
-       
-           echo "Modificações aplicadas no arquivo Client.js."
+          # Atualizar `package.json`
+          PACKAGE_VERSION=$(jq -r .version whatsapp-web.js/package.json)
+          echo "A última versão do projeto base é: $PACKAGE_VERSION"
+          jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
+
+          # Aplicar as substituições no arquivo Client.js
+          FILE_PATH="src/Client.js"
+          sed -i "s|const puppeteer = require('puppeteer');|const pie = require('puppeteer-in-electron');|" $FILE_PATH
+          sed -i "s|constructor(options = {}) {|constructor(puppeteerBrowser, browserWindow, options = {}) {|" $FILE_PATH
+          sed -i "s|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\nthis.browserWindow = browserWindow;|" $FILE_PATH
+          sed -i "/let \[browser, page\] = \[null, null\];/,/await page.authenticate(this.options.proxyAuthentication);/c const page = await pie.getPage(this.pupBrowser, this.browserWindow);\npage.setUserAgent(this.options.userAgent);" $FILE_PATH
+          sed -i "/this.pupBrowser = browser;/d" $FILE_PATH
+
+          # Imprimir o conteúdo do arquivo modificado
+          echo "------------ CONTEÚDO DO ARQUIVO MODIFICADO ------------"
+          cat $FILE_PATH
+          echo "-------------------------------------------------------"
+          echo "Modificações aplicadas no arquivo Client.js."
 
       - name: Commit e Push
         run: |
@@ -62,5 +64,5 @@ jobs:
           git add .
           git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
           git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
-          git push --set-upstream origin temp-sync-branch
+          git push --set-upstream origin $BRANCH_NAME
           echo "Mudanças commitadas e enviadas."
