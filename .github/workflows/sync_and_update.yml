@@ -41,6 +41,7 @@ jobs:
           PACKAGE_VERSION=$(jq -r .version package.json)
           echo "A última versão do projeto base é: $PACKAGE_VERSION"
           jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
+          echo "Versão de package.json atualizada."
 
           # Aplicar as substituições no arquivo Client.js
           FILE_PATH="src/Client.js"
