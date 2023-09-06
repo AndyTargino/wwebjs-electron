@@ -20,9 +20,12 @@ jobs:
 
           - name: Merge changes excluding README and .github
           run: |
+            git remote add upstream https://github.com/pedroslopez/whatsapp-web.js
+            git fetch upstream
             git merge upstream/main --strategy-option=theirs --allow-unrelated-histories
             git checkout HEAD README.md        # Restores the README.md
             git checkout HEAD .github/         # Restores the .github folder
+  
   
 
       - name: Update package.json dependency version
