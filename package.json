@@ -1,7 +1,7 @@
 {
-  "name": "whatsapp-web.js",
+  "name": "wwebjs-electron",
   "version": "1.22.2-alpha.0",
-  "description": "Library for interacting with the WhatsApp Web API ",
+  "description": "Library for interacting with the WhatsApp Web API through electron",
   "main": "./index.js",
   "typings": "./index.d.ts",
   "scripts": {
@@ -12,9 +12,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pedroslopez/whatsapp-web.js.git"
+    "url": "git+https://github.com/AndyTargino/wwebjs-electron.git"
   },
   "keywords": [
+    "electron",
     "whatsapp",
     "whatsapp-web",
     "api",
@@ -22,20 +23,20 @@
     "client",
     "node"
   ],
-  "author": "Pedro Lopez",
+  "author": "Anderson Targino",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/pedroslopez/whatsapp-web.js/issues"
+    "url": "https://github.com/AndyTargino/wwebjs-electron/issues"
   },
-  "homepage": "https://wwebjs.dev/",
+  "homepage": "https://github.com/AndyTargino/wwebjs-electron",
   "dependencies": {
     "@pedroslopez/moduleraid": "^5.0.2",
     "fluent-ffmpeg": "^2.1.2",
     "jsqr": "^1.3.1",
     "mime": "^3.0.0",
-    "node-fetch": "^2.6.5",
+    "node-fetch": "^2.6.1",
     "node-webpmux": "^3.1.0",
-    "puppeteer": "^13.0.0"
+    "puppeteer-in-electron": "^3.0.5"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.5.12",
@@ -46,15 +47,15 @@
     "eslint-plugin-mocha": "^10.0.3",
     "jsdoc": "^3.6.4",
     "jsdoc-baseline": "^0.1.5",
-    "mocha": "^9.0.2",
-    "sinon": "^13.0.1"
+    "mocha": "^10.2.0",
+    "sinon": "^15.0.3"
   },
   "engines": {
     "node": ">=12.0.0"
   },
   "optionalDependencies": {
     "archiver": "^5.3.1",
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.1.1",
     "unzipper": "^0.10.11"
   }
 }
