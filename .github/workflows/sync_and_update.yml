@@ -52,7 +52,11 @@ jobs:
 
     - name: Clonar e copiar arquivos do whatsapp-web.js
       if: steps.check_version.outputs.should_continue == 'true'
-      run: git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
+      run: |
+        git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
+        cd whatsapp-web.js
+        git checkout ${{ steps.latest_version.outputs.version }}
+      
 
     - name: Copiar arquivos e remover diretório temporário
       if: steps.check_version.outputs.should_continue == 'true'
