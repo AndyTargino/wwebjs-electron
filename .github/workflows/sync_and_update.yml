@@ -35,7 +35,7 @@ jobs:
 
     - name: Copiar arquivos e remover diretório temporário
       run: |
-            rsync -a --exclude '.git/' --exclude 'README.md' --exclude '.eslintrc.json' --exclude '.github/' whatsapp-web.js/ ./  # Copia os arquivos com exclusões específicas
+            rsync -a --exclude '.git/' --exclude 'README.md' --exclude 'package.json' --exclude '.eslintrc.json' --exclude '.github/' whatsapp-web.js/ ./  # Copia os arquivos com exclusões específicas
 
     - name: Aplicar modificações
       run: |
