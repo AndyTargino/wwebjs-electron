@@ -70,7 +70,10 @@ jobs:
         sed -i "s|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\nthis.browserWindow = browserWindow;|" $FILE_PATH
         sed -i "/let \[browser, page\] = \[null, null\];/,/this.pupPage = page;/c const page = await pie.getPage(this.pupBrowser, this.browserWindow);\npage.setUserAgent(this.options.userAgent);\n\nawait page.setUserAgent(this.options.userAgent);\nif (this.options.bypassCSP) await page.setBypassCSP(true);\n\nthis.pupPage = page;" $FILE_PATH
         sed -i "/this.pupBrowser = browser;/d" $FILE_PATH
-
+        
+        # Exibindo o conteúdo do arquivo modificado
+        cat $FILE_PATH
+    
     - name: Verificar se há commits novos
       id: check_commits
       if: steps.check_version.outputs.should_continue == 'true'
