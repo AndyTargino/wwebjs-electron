@@ -19,10 +19,12 @@ jobs:
     - name: Obter a última versão da release do projeto base
       id: latest_version
       run: |
-        LATEST_VERSION=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/releases/latest" | jq -r .tag_name)
+        ALL_VERSIONS=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/releases" | jq -r '.[].tag_name')
+        LATEST_VERSION=$(printf "%s\n" $ALL_VERSIONS | sort -V | tail -1)
         echo "::set-output name=version::$LATEST_VERSION"
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+
 
     - name: Verificar se a nova versão é mais recente
       id: check_version
