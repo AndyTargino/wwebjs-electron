@@ -76,8 +76,10 @@ jobs:
       run: |
         NEW_COMMITS=$(git log main..temp-sync-branch --oneline)
         if [ -z "$NEW_COMMITS" ]; then
-          echo "::set-output name=has_changes::false"
+          echo "Não há commits novos"
+          echo "::set-output name=has_changes::true"
         else
+          echo "Há commits novos"
           echo "::set-output name=has_changes::true"
         fi
 
