@@ -31,9 +31,13 @@ jobs:
         MY_LATEST_VERSION=$(curl --silent "https://api.github.com/repos/AndyTargino/wwebjs-electron/releases/latest" | jq -r .tag_name)
         LATEST_LIB_VERSION=${{ steps.latest_version.outputs.version }}
         MOST_RECENT=$(printf "%s\n%s\n" "$MY_LATEST_VERSION" "$LATEST_LIB_VERSION" | sort -V | tail -1)
+        echo "Versão obtida: $MOST_RECENT"
+        echo "Minha versão: $MY_LATEST_VERSION"
         if [[ "$MOST_RECENT" == "$MY_LATEST_VERSION" ]]; then
+        echo "AS VERSÕES SÃO IGUAIS"
           echo "::set-output name=should_continue::false"
         else
+          echo "As versões são diferentes"
           echo "::set-output name=should_continue::true"
         fi
       env:
