@@ -1,8 +1,8 @@
 name: Sync and Update
 
 on:
-  schedule:
-    - cron: '0 * * * *'
+  # schedule:
+    # - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -53,11 +53,8 @@ jobs:
     - name: Clonar e copiar arquivos do whatsapp-web.js
       if: steps.check_version.outputs.should_continue == 'true'
       run: |
-        git clone https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
-        cd whatsapp-web.js
-        git checkout ${{ steps.latest_version.outputs.version }}
+        git clone --depth 1 -b ${{ steps.latest_version.outputs.version }} https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web.js
       
-
     - name: Copiar arquivos e remover diretório temporário
       if: steps.check_version.outputs.should_continue == 'true'
       run: rsync -a --exclude '.git/' --exclude 'README.md' --exclude 'package.json' --exclude '.eslintrc.json' --exclude '.github/' whatsapp-web.js/ ./
