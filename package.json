@@ -54,7 +54,7 @@
     "node": ">=12.0.0"
   },
   "optionalDependencies": {
-    "archiver": "^5.3.1",
+    "archiver": "^7.0.0",
     "fs-extra": "^11.1.1",
     "unzipper": "^0.10.11"
   }
