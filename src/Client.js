@@ -728,7 +728,7 @@ this.pupPage = page;
         const { type: webCacheType, ...webCacheOptions } = this.options.webVersionCache;
         const webCache = WebCacheFactory.createWebCache(webCacheType, webCacheOptions);
 
-        const requestedVersion = '2.2409.2';
+        const requestedVersion = this.options.webVersion;
         const versionContent = await webCache.resolve(requestedVersion);
 
         if(versionContent) {
