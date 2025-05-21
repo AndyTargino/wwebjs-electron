@@ -4,7 +4,7 @@
 <head>
   <meta name="generator" content="JSDoc 3.6.11">
   <meta charset="utf-8">
-  <title>whatsapp-web.js 1.28.0 &raquo; Source: structures/ProductMetadata.js</title>
+  <title>whatsapp-web.js 1.28.0 &raquo; Source: util/Puppeteer.js</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
@@ -26,34 +26,33 @@
         </div>
         <div id="jsdoc-main" role="main">
           <header class="page-header">
-            <h1>Source: structures/ProductMetadata.js</h1>
+            <h1>Source: util/Puppeteer.js</h1>
           </header>
           <article>
-            <pre class="prettyprint linenums"><code>const Base &#x3D; require(&#x27;./Base&#x27;);
-
-class ProductMetadata extends Base {
-    constructor(client, data) {
-        super(client);
-
-        if (data) this._patch(data);
+            <pre class="prettyprint linenums"><code>/**
+ * Expose a function to the page if it does not exist
+ *
+ * NOTE:
+ * Rewrite it to &#x27;upsertFunction&#x27; after updating Puppeteer to 20.6 or higher
+ * using page.removeExposedFunction
+ * https://pptr.dev/api/puppeteer.page.removeExposedFunction
+ *
+ * @param {import(puppeteer).Page} page
+ * @param {string} name
+ * @param {Function} fn
+ */
+async function exposeFunctionIfAbsent(page, name, fn) {
+    const exist &#x3D; await page.evaluate((name) &#x3D;&gt; {
+        return !!window[name];
+    }, name);
+    if (exist) {
+        return;
     }
-
-    _patch(data) {
-        /** Product ID */
-        this.id &#x3D; data.id;
-        /** Retailer ID */
-        this.retailer_id &#x3D; data.retailer_id;
-        /** Product Name  */
-        this.name &#x3D; data.name;
-        /** Product Description */
-        this.description &#x3D; data.description;
-
-        return super._patch(data);
-    }
-
+    await page.exposeFunction(name, fn);
 }
 
-module.exports &#x3D; ProductMetadata;</code></pre>
+module.exports &#x3D; {exposeFunctionIfAbsent};
+</code></pre>
           </article>
         </div>
       </div>

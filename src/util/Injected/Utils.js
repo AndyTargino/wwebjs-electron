@@ -4,7 +4,7 @@ exports.LoadUtils = () => {
     window.WWebJS = {};
 
     window.WWebJS.forwardMessage = async (chatId, msgId) => {
-        let msg = window.Store.Msg.get(msgId);
+        const msg = window.Store.Msg.get(msgId) || (await window.Store.Msg.getMessagesById([msgId]))?.messages?.[0];
         let chat = window.Store.Chat.get(chatId);
 
         if (window.compareWwebVersions(window.Debug.VERSION, '>', '2.3000.0')) {
@@ -44,16 +44,26 @@ exports.LoadUtils = () => {
         }
         let quotedMsgOptions = {};
         if (options.quotedMessageId) {
-            let quotedMessage = window.Store.Msg.get(options.quotedMessageId);
+            let quotedMessage = await window.Store.Msg.getMessagesById([options.quotedMessageId]);
 
-            // TODO remove .canReply() once all clients are updated to >= v2.2241.6
-            const canReply = window.Store.ReplyUtils ? 
-                window.Store.ReplyUtils.canReplyMsg(quotedMessage.unsafe()) : 
-                quotedMessage.canReply();
+            if (quotedMessage['messages'].length == 1) {
+                quotedMessage = quotedMessage['messages'][0];
 
-            if (canReply) {
-                quotedMsgOptions = quotedMessage.msgContextInfo(chat);
+                // TODO remove .canReply() once all clients are updated to >= v2.2241.6
+                const canReply = window.Store.ReplyUtils ?
+                    window.Store.ReplyUtils.canReplyMsg(quotedMessage.unsafe()) :
+                    quotedMessage.canReply();
+
+                if (canReply) {
+                    quotedMsgOptions = quotedMessage.msgContextInfo(chat);
+                }
+            }else{
+                if(!options.ignoreQuoteErrors) {
+                    throw new Error('Could not get the quoted message.');
+                }
             }
+            
+            delete options.ignoreQuoteErrors;
             delete options.quotedMessageId;
         }
 
@@ -433,24 +443,24 @@ exports.LoadUtils = () => {
         return msg;
     };
 
-    window.WWebJS.getPollVoteModel = (vote) => {
+    window.WWebJS.getPollVoteModel = async (vote) => {
         const _vote = vote.serialize();
-        if (vote.parentMsgKey) {
-            const msg = window.Store.Msg.get(vote.parentMsgKey);
-            msg && (_vote.parentMessage = window.WWebJS.getMessageModel(msg));
-            return _vote;
-        }
-        return null;
+        if (!vote.parentMsgKey) return null;
+        const msg =
+            window.Store.Msg.get(vote.parentMsgKey) || (await window.Store.Msg.getMessagesById([vote.parentMsgKey]))?.messages?.[0];
+        msg && (_vote.parentMessage = window.WWebJS.getMessageModel(msg));
+        return _vote;
     };
 
     window.WWebJS.getChatModel = async chat => {
 
         let res = chat.serialize();
-        res.isGroup = chat.isGroup;
+        res.isGroup = false;
         res.formattedTitle = chat.formattedTitle;
-        res.isMuted = chat.mute && chat.mute.isMuted;
+        res.isMuted = chat.muteExpiration == 0 ? false : true;
 
         if (chat.groupMetadata) {
+            res.isGroup = true;
             const chatWid = window.Store.WidFactory.createWid((chat.id._serialized));
             await window.Store.GroupMetadata.update(chatWid);
             res.groupMetadata = chat.groupMetadata.serialize();
@@ -458,7 +468,9 @@ exports.LoadUtils = () => {
         
         res.lastMessage = null;
         if (res.msgs && res.msgs.length) {
-            const lastMessage = chat.lastReceivedKey ? window.Store.Msg.get(chat.lastReceivedKey._serialized) : null;
+            const lastMessage = chat.lastReceivedKey
+                ? window.Store.Msg.get(chat.lastReceivedKey._serialized) || (await window.Store.Msg.getMessagesById([chat.lastReceivedKey._serialized]))?.messages?.[0]
+                : null;
             if (lastMessage) {
                 res.lastMessage = window.WWebJS.getMessageModel(lastMessage);
             }
@@ -913,7 +925,7 @@ exports.LoadUtils = () => {
         let response;
         let result = [];
 
-        await window.Store.GroupQueryAndUpdate(groupWid);
+        await window.Store.GroupQueryAndUpdate({ id: groupId });
 
         if (!requesterIds?.length) {
             membershipRequests = group.groupMetadata.membershipApprovalRequests._models.map(({ id }) => id);
@@ -1001,11 +1013,21 @@ exports.LoadUtils = () => {
     };
 
     window.WWebJS.pinUnpinMsgAction = async (msgId, action, duration) => {
-        const message = window.Store.Msg.get(msgId);
+        const message = window.Store.Msg.get(msgId) || (await window.Store.Msg.getMessagesById([msgId]))?.messages?.[0];
         if (!message) return false;
         const response = await window.Store.pinUnpinMsg(message, action, duration);
-        if (response.messageSendResult === 'OK') return true;
-        return false;
+        return response.messageSendResult === 'OK';
+    };
+    
+    window.WWebJS.getStatusModel = status => {
+        let res = status.serialize();
+        delete res._msgs;
+        res.msgs = status._msgs.map(msg => window.WWebJS.getMessageModel(msg));
+        return res;
     };
 
+    window.WWebJS.getAllStatuses = () => {
+        const statuses = window.Store.Status.getModelsArray();
+        return statuses.map(status => window.WWebJS.getStatusModel(status));
+    };
 };
