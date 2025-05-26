@@ -4,7 +4,7 @@
 <head>
   <meta name="generator" content="JSDoc 3.6.11">
   <meta charset="utf-8">
-  <title>whatsapp-web.js 1.28.0 &raquo; Source: structures/ProductMetadata.js</title>
+  <title>whatsapp-web.js 1.28.0 &raquo; Source: structures/PollVote.js</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
@@ -26,12 +26,26 @@
         </div>
         <div id="jsdoc-main" role="main">
           <header class="page-header">
-            <h1>Source: structures/ProductMetadata.js</h1>
+            <h1>Source: structures/PollVote.js</h1>
           </header>
           <article>
-            <pre class="prettyprint linenums"><code>const Base &#x3D; require(&#x27;./Base&#x27;);
+            <pre class="prettyprint linenums"><code>&#x27;use strict&#x27;;
 
-class ProductMetadata extends Base {
+const Message &#x3D; require(&#x27;./Message&#x27;);
+const Base &#x3D; require(&#x27;./Base&#x27;);
+
+/**
+ * Selected poll option structure
+ * @typedef {Object} SelectedPollOption
+ * @property {number} id The local selected or deselected option ID
+ * @property {string} name The option name
+ */
+
+/**
+ * Represents a Poll Vote on WhatsApp
+ * @extends {Base}
+ */
+class PollVote extends Base {
     constructor(client, data) {
         super(client);
 
@@ -39,21 +53,44 @@ class ProductMetadata extends Base {
     }
 
     _patch(data) {
-        /** Product ID */
-        this.id &#x3D; data.id;
-        /** Retailer ID */
-        this.retailer_id &#x3D; data.retailer_id;
-        /** Product Name  */
-        this.name &#x3D; data.name;
-        /** Product Description */
-        this.description &#x3D; data.description;
+        /**
+         * The person who voted
+         * @type {string}
+         */
+        this.voter &#x3D; data.sender;
+
+        /**
+         * The selected poll option(s)
+         * If it&#x27;s an empty array, the user hasn&#x27;t selected any options on the poll,
+         * may occur when they deselected all poll options
+         * @type {SelectedPollOption[]}
+         */
+        this.selectedOptions &#x3D;
+            data.selectedOptionLocalIds.length &gt; 0
+                ? data.selectedOptionLocalIds.map((e) &#x3D;&gt; ({
+                    name: data.parentMessage.pollOptions.find((x) &#x3D;&gt; x.localId &#x3D;&#x3D;&#x3D; e).name,
+                    localId: e
+                }))
+                : [];
+
+        /**
+         * Timestamp the option was selected or deselected at
+         * @type {number}
+         */
+        this.interractedAtTs &#x3D; data.senderTimestampMs;
+
+        /**
+         * The poll creation message associated with the poll vote
+         * @type {Message}
+         */
+        this.parentMessage &#x3D; new Message(this.client, data.parentMessage);
 
         return super._patch(data);
     }
-
 }
 
-module.exports &#x3D; ProductMetadata;</code></pre>
+module.exports &#x3D; PollVote;
+</code></pre>
           </article>
         </div>
       </div>
