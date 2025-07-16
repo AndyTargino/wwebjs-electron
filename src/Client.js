@@ -305,12 +305,12 @@ this.browserWindow = browserWindow;
             const originalError = Error;
             window.originalError = originalError;
             Error = function (message) {
-            const error = new originalError(message);
-            const originalStack = error.stack;
-            if (error.stack.includes('moduleRaid')) {
-                error.stack = originalStack + '\n    at https://web.whatsapp.com/vendors~lazy_loaded_low_priority_components.05e98054dbd60f980427.js:2:44';
-            }
-            return error;
+                const error = new originalError(message);
+                const originalStack = error.stack;
+                if (error.stack.includes('moduleRaid')) {
+                    error.stack = originalStack + '\n    at https://web.whatsapp.com/vendors~lazy_loaded_low_priority_components.05e98054dbd60f980427.js:2:44';
+                }
+                return error;
             };
         });
 
