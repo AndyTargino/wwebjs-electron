@@ -262,83 +262,78 @@ this.browserWindow = browserWindow;
      * Sets up events and requirements, kicks off authentication request
      */
     async initialize() {
-
-        let 
-            /**
-             * @type {puppeteer.Browser}
-             */
-            browser, 
-            /**
-             * @type {puppeteer.Page}
-             */
-            page;
-
-        browser = null;
-        page = null;
+        let browser = null;
+        let page = null;
 
         await this.authStrategy.beforeBrowserInitialized();
 
         const puppeteerOpts = this.options.puppeteer;
+
         if (puppeteerOpts && puppeteerOpts.browserWSEndpoint) {
             browser = await puppeteer.connect(puppeteerOpts);
             page = await browser.newPage();
         } else {
             const browserArgs = [...(puppeteerOpts.args || [])];
-            if(!browserArgs.find(arg => arg.includes('--user-agent'))) {
+            if (!browserArgs.find(arg => arg.includes('--user-agent'))) {
                 browserArgs.push(`--user-agent=${this.options.userAgent}`);
             }
-            // navigator.webdriver fix
             browserArgs.push('--disable-blink-features=AutomationControlled');
 
-            browser = await puppeteer.launch({...puppeteerOpts, args: browserArgs});
-            page = (await browser.pages())[0];
+            if (typeof this.pupBrowser.connect === 'function') {
+                this.puppeteerBrowser = await this.pupBrowser.connect(app, puppeteer);
+            } else {
+                this.puppeteerBrowser = this.pupBrowser;
+            }
+
+            const pages = await this.puppeteerBrowser.pages();
+            page = pages.length > 0 ? pages[0] : await this.puppeteerBrowser.newPage();
         }
+
+        this.pupPage = page;
 
         if (this.options.proxyAuthentication !== undefined) {
             await page.authenticate(this.options.proxyAuthentication);
         }
-      
+
         await page.setUserAgent(this.options.userAgent);
         if (this.options.bypassCSP) await page.setBypassCSP(true);
-
-        this.pupPage = page;
 
         await this.authStrategy.afterBrowserInitialized();
         await this.initWebVersionCache();
 
-        // ocVersion (isOfficialClient patch)
-        // remove after 2.3000.x hard release
         await page.evaluateOnNewDocument(() => {
             const originalError = Error;
             window.originalError = originalError;
-            //eslint-disable-next-line no-global-assign
             Error = function (message) {
-                const error = new originalError(message);
-                const originalStack = error.stack;
-                if (error.stack.includes('moduleRaid')) error.stack = originalStack + '\n    at https://web.whatsapp.com/vendors~lazy_loaded_low_priority_components.05e98054dbd60f980427.js:2:44';
-                return error;
+            const error = new originalError(message);
+            const originalStack = error.stack;
+            if (error.stack.includes('moduleRaid')) {
+                error.stack = originalStack + '\n    at https://web.whatsapp.com/vendors~lazy_loaded_low_priority_components.05e98054dbd60f980427.js:2:44';
+            }
+            return error;
             };
         });
-        
+
         await page.goto(WhatsWebURL, {
             waitUntil: 'load',
             timeout: 0,
-            referer: 'https://whatsapp.com/'
+            referer: 'https://whatsapp.com/',
         });
 
         await this.inject();
 
-        this.pupPage.on('framenavigated', async (frame) => {
-            if(frame.url().includes('post_logout=1') || this.lastLoggedOut) {
-                this.emit(Events.DISCONNECTED, 'LOGOUT');
-                await this.authStrategy.logout();
-                await this.authStrategy.beforeBrowserInitialized();
-                await this.authStrategy.afterBrowserInitialized();
-                this.lastLoggedOut = false;
+        page.on('framenavigated', async (frame) => {
+            if (frame.url().includes('post_logout=1') || this.lastLoggedOut) {
+            this.emit(Events.DISCONNECTED, 'LOGOUT');
+            await this.authStrategy.logout();
+            await this.authStrategy.beforeBrowserInitialized();
+            await this.authStrategy.afterBrowserInitialized();
+            this.lastLoggedOut = false;
             }
             await this.inject();
         });
     }
+    
 
     /**
      * Request authentication via pairing code instead of QR code
