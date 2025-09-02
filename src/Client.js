@@ -218,7 +218,7 @@ this.browserWindow = browserWindow;
                      * @type {ClientInfo}
                      */
                 this.info = new ClientInfo(this, await this.pupPage.evaluate(() => {
-                    return { ...window.Store.Conn.serialize(), wid: window.Store.User.getMeUser() };
+                    return { ...window.Store.Conn.serialize(), wid: window.Store.User.getMaybeMeLidUser() };
                 }));
 
                 this.interface = new InterfaceController(this);
