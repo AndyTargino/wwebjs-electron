@@ -116,17 +116,15 @@ jobs:
       env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
-    - name: Publicar no NPM
-      if: steps.check_version.outputs.should_continue == 'true' && steps.check_diff.outputs.has_changes == 'true'
-      run: |
-        echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        npm publish
-        echo "Pacote publicado no NPM com sucesso!"
-      env:
-        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
     - name: Excluir branch temporária
       if: steps.check_version.outputs.should_continue == 'true'
-      run: git push origin --delete temp-sync-branch
+      run: |
+        if git ls-remote --exit-code origin temp-sync-branch >/dev/null 2>&1; then
+          git push origin --delete temp-sync-branch || echo "Falha ao deletar branch, mas continuando..."
+          echo "Branch temp-sync-branch deletada com sucesso"
+        else
+          echo "Branch temp-sync-branch não existe no remote, pulando exclusão"
+        fi
+      continue-on-error: true
       env:
            GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
