@@ -16,13 +16,12 @@ jobs:
         repository: AndyTargino/wwebjs-electron
         fetch-depth: 0
 
-    - name: Obter a última versão do pull request
+    - name: Obter a última versão do whatsapp-web.js
       id: latest_version
       run: |
-        PULL_REQUEST_URL="https://api.github.com/repos/pedroslopez/whatsapp-web.js/pulls/2816"
-        BASE_REF=$(curl --silent $PULL_REQUEST_URL | jq -r '.base.ref')
-        echo "Base ref do PR: $BASE_REF"
-        echo "::set-output name=version::$BASE_REF"
+        LATEST_TAG=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/releases/latest" | jq -r .tag_name)
+        echo "Última versão do whatsapp-web.js: $LATEST_TAG"
+        echo "::set-output name=version::$LATEST_TAG"
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
@@ -66,14 +65,7 @@ jobs:
         PACKAGE_VERSION=$(jq -r .version whatsapp-web.js/package.json)
         jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
         FILE_PATH="src/Client.js"
-        sed -i "s|const puppeteer = require('puppeteer');|const pie = require('puppeteer-in-electron');|" $FILE_PATH
-        sed -i "s|constructor(options = {}) {|constructor(puppeteerBrowser, browserWindow, options = {}) {|" $FILE_PATH
-        sed -i "s|this.pupBrowser = null;|this.pupBrowser = puppeteerBrowser;\nthis.browserWindow = browserWindow;|" $FILE_PATH
-        sed -i "/let \[browser, page\] = \[null, null\];/,/this.pupPage = page;/c const page = await pie.getPage(this.pupBrowser, this.browserWindow);\npage.setUserAgent(this.options.userAgent);\n\nawait page.setUserAgent(this.options.userAgent);\nif (this.options.bypassCSP) await page.setBypassCSP(true);\n\nthis.pupPage = page;" $FILE_PATH
-        sed -i "/this.pupBrowser = browser;/d" $FILE_PATH
-        
-        # Exibindo o conteúdo do arquivo modificado
-        cat $FILE_PATH
+        sed -i 's|if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))|if (this.options.page) { page = this.options.page; browser = page.browser(); } else if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))|' $FILE_PATH
     
     - name: Verificar se há commits novos
       id: check_commits
