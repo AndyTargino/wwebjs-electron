@@ -37,17 +37,25 @@ jobs:
           exit 0
         fi
 
+        # Verificar se a release da versão da lib existe
+        RELEASE_EXISTS=$(gh release view "$LATEST_LIB_VERSION" --json tagName --jq '.tagName' 2>/dev/null || echo "not_found")
+        
         CLEAN_LATEST_LIB_VERSION=$(echo "$LATEST_LIB_VERSION" | sed -e 's/^v//' -e 's/^\.//')
         CLEAN_MY_LATEST_VERSION=$(echo "$MY_LATEST_VERSION" | sed -e 's/^v//' -e 's/^\.//')
 
         echo "Versão da lib (limpa): $CLEAN_LATEST_LIB_VERSION"
         echo "Minha versão (limpa): $CLEAN_MY_LATEST_VERSION"
+        echo "Release $LATEST_LIB_VERSION existe: $([ "$RELEASE_EXISTS" != "not_found" ] && echo "sim" || echo "não")"
 
-        if [ "$(printf '%s\n' "$CLEAN_LATEST_LIB_VERSION" "$CLEAN_MY_LATEST_VERSION" | sort -V | head -n1)" = "$CLEAN_MY_LATEST_VERSION" ] && [ "$CLEAN_LATEST_LIB_VERSION" != "$CLEAN_MY_LATEST_VERSION" ]; then
+        # Continuar se: versão da lib é mais nova OU release não existe
+        if [ "$RELEASE_EXISTS" = "not_found" ]; then
+          echo "Release $LATEST_LIB_VERSION não existe, será criada"
+          echo "should_continue=true" >> $GITHUB_OUTPUT
+        elif [ "$(printf '%s\n' "$CLEAN_LATEST_LIB_VERSION" "$CLEAN_MY_LATEST_VERSION" | sort -V | head -n1)" = "$CLEAN_MY_LATEST_VERSION" ] && [ "$CLEAN_LATEST_LIB_VERSION" != "$CLEAN_MY_LATEST_VERSION" ]; then
           echo "Nova versão do whatsapp-web.js encontrada: $LATEST_LIB_VERSION (a sua é $MY_LATEST_VERSION)"
           echo "should_continue=true" >> $GITHUB_OUTPUT
         else
-          echo "Sua versão $MY_LATEST_VERSION está atualizada."
+          echo "Sua versão $MY_LATEST_VERSION está atualizada e release existe."
           echo "should_continue=false" >> $GITHUB_OUTPUT
         fi
       env:
