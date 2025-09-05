@@ -37,6 +37,13 @@ jobs:
           exit 0
         fi
 
+        # Verificar se não há releases (quando apagadas manualmente)
+        if [ "$MY_LATEST_VERSION" = "null" ] || [ -z "$MY_LATEST_VERSION" ]; then
+          echo "Nenhuma release encontrada no repositório, criando release $LATEST_LIB_VERSION"
+          echo "should_continue=true" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
         # Verificar se a release da versão da lib existe
         RELEASE_EXISTS=$(gh release view "$LATEST_LIB_VERSION" --json tagName --jq '.tagName' 2>/dev/null || echo "not_found")
         
