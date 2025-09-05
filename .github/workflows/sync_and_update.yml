@@ -37,8 +37,15 @@ jobs:
           exit 0
         fi
 
+        # Sanitiza as versões para um formato limpo (ex: 1.33.2) para garantir uma comparação robusta
+        CLEAN_LATEST_LIB_VERSION=$(echo "$LATEST_LIB_VERSION" | sed -e 's/^v//' -e 's/^\.//')
+        CLEAN_MY_LATEST_VERSION=$(echo "$MY_LATEST_VERSION" | sed -e 's/^v//' -e 's/^\.//')
+
+        echo "Versão da lib (limpa): $CLEAN_LATEST_LIB_VERSION"
+        echo "Minha versão (limpa): $CLEAN_MY_LATEST_VERSION"
+
         # Compara as versões para ver se uma atualização é necessária
-        if [ "$(printf '%s\n' "$LATEST_LIB_VERSION" "$MY_LATEST_VERSION" | sort -V | head -n1)" = "$MY_LATEST_VERSION" ] && [ "$LATEST_LIB_VERSION" != "$MY_LATEST_VERSION" ]; then
+        if [ "$(printf '%s\n' "$CLEAN_LATEST_LIB_VERSION" "$CLEAN_MY_LATEST_VERSION" | sort -V | head -n1)" = "$CLEAN_MY_LATEST_VERSION" ] && [ "$CLEAN_LATEST_LIB_VERSION" != "$CLEAN_MY_LATEST_VERSION" ]; then
           echo "Nova versão do whatsapp-web.js encontrada: $LATEST_LIB_VERSION (a sua é $MY_LATEST_VERSION)"
           echo "::set-output name=should_continue::true"
         else
@@ -50,7 +57,7 @@ jobs:
 
     - name: Criação da nova branch
       run: |
-        if git show-ref --quiet refs/heads/temp-sync-branch; then
+        if git show-ref --quiet refs/heads/temp-sync-branch;
           git branch -D temp-sync-branch
         fi
         git checkout -b temp-sync-branch
