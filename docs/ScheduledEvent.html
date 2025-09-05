@@ -4,7 +4,7 @@
 <head>
   <meta name="generator" content="JSDoc 3.6.11">
   <meta charset="utf-8">
-  <title>whatsapp-web.js 1.33.2 &raquo; Class: Buttons</title>
+  <title>whatsapp-web.js 1.33.2 &raquo; Class: ScheduledEvent</title>
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Karla:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Noto+Serif:400,400i,700,700i" type="text/css">
   <link rel="stylesheet" href="https://brick.a.ssl.fastly.net/Inconsolata:500" type="text/css">
@@ -25,10 +25,10 @@
         <div id="jsdoc-main" role="main">
           <header class="page-header">
             <div class="symbol-detail-labels"><span class="label label-kind">class</span></div>
-            <h1><small></small><span class="symbol-name">Buttons</span></h1>
-            <p class="source-link">Source: <a href="structures_Buttons.js.html#source-line-23">structures/<wbr>Buttons.<wbr>js:23</a></p>
+            <h1><small></small><span class="symbol-name">ScheduledEvent</span></h1>
+            <p class="source-link">Source: <a href="structures_ScheduledEvent.js.html#source-line-15">structures/<wbr>ScheduledEvent.<wbr>js:15</a></p>
             <div class="symbol-classdesc">
-              <p>Message type buttons</p>
+              <p>Represents a ScheduledEvent on WhatsApp</p>
             </div>
             <dl class="dl-compact">
             </dl>
@@ -39,25 +39,24 @@
               <div class="summary-content">
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="Buttons.html#body">body</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="Buttons.html#buttons">buttons</a></dt>
+                    <dt><a href="ScheduledEvent.html#eventSendOptions">eventSendOptions</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="Buttons.html#footer">footer</a></dt>
-                    <dd>
-                    </dd>
-                    <dt><a href="Buttons.html#title">title</a></dt>
+                    <dt><a href="ScheduledEvent.html#name">name</a></dt>
                     <dd>
                     </dd>
                   </dl>
                 </div>
                 <div class="summary-column">
+                  <dl class="dl-summary-callout">
+                    <dt><a href="ScheduledEvent.html#startTimeTs">startTimeTs</a></dt>
+                    <dd>
+                    </dd>
+                  </dl>
                 </div>
               </div>
             </div>
@@ -66,7 +65,7 @@
               <div class="summary-content">
                 <div class="summary-column">
                   <dl class="dl-summary-callout">
-                    <dt><a href="Buttons.html#_format">_format(buttons)</a></dt>
+                    <dt><a href="ScheduledEvent.html#_validateInputs">_validateInputs(propName, propValue)</a></dt>
                     <dd>
                     </dd>
                   </dl>
@@ -79,7 +78,7 @@
             </div>
           </section>
           <section>
-            <h2 id="Buttons">new&nbsp;<span class="symbol-name">Buttons</span><span class="signature"><span class="signature-params">(body, buttons, title, footer)</span></span></h2>
+            <h2 id="ScheduledEvent">new&nbsp;<span class="symbol-name">ScheduledEvent</span><span class="signature"><span class="signature-params">(name, startTime, options)</span></span></h2>
             <section>
               <h3>Parameters</h3>
               <table class="jsdoc-details-table">
@@ -94,7 +93,7 @@
                 <tbody>
                   <tr>
                     <td>
-                      <p>body</p>
+                      <p>name</p>
                     </td>
                     <td>
                       <p>&nbsp;</p>
@@ -107,7 +106,7 @@
                   </tr>
                   <tr>
                     <td>
-                      <p>buttons</p>
+                      <p>startTime</p>
                     </td>
                     <td>
                       <p>&nbsp;</p>
@@ -116,12 +115,11 @@
                       <p>&nbsp;</p>
                     </td>
                     <td>
-                      <p>See <a href="global.html#ButtonSpec"><code>ButtonSpec</code></a></p>
                     </td>
                   </tr>
                   <tr>
                     <td>
-                      <p>title</p>
+                      <p>options</p>
                     </td>
                     <td>
                       <p>&nbsp;</p>
@@ -130,21 +128,6 @@
                       <p>&nbsp;</p>
                     </td>
                     <td>
-                      <p>Value can be null.</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <p>footer</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>&nbsp;</p>
-                    </td>
-                    <td>
-                      <p>Value can be null.</p>
                     </td>
                   </tr>
                 </tbody>
@@ -156,42 +139,28 @@
           <section>
             <h2>Properties</h2>
             <section>
-              <h3 id="body"><span class="symbol-name">body</span><small class="property-type">
-                  &nbsp;(string or <a href="MessageMedia.html">MessageMedia</a>)</small></h3>
-              <p>Message body</p>
+              <h3 id="eventSendOptions"><span class="symbol-name">eventSendOptions</span><small class="property-type">
+                  &nbsp;Object</small></h3>
+              <p>The send options for the event</p>
               <dl class="dl-compact">
               </dl>
-              <h3 id="buttons"><span class="symbol-name">buttons</span><small class="property-type">
-                  &nbsp;Array of <a href="global.html#FormattedButtonSpec">FormattedButtonSpec</a></small></h3>
-              <p>buttons of message</p>
-              <dl class="dl-compact">
-              </dl>
-              <h3 id="footer"><span class="symbol-name">footer</span><small class="property-type">
+              <h3 id="name"><span class="symbol-name">name</span><small class="property-type">
                   &nbsp;string</small></h3>
-              <p>footer of message</p>
+              <p>The name of the event</p>
               <dl class="dl-compact">
               </dl>
-              <h3 id="title"><span class="symbol-name">title</span><small class="property-type">
-                  &nbsp;string</small></h3>
-              <p>title of message</p>
+              <h3 id="startTimeTs"><span class="symbol-name">startTimeTs</span><small class="property-type">
+                  &nbsp;number</small></h3>
+              <p>The start time of the event</p>
               <dl class="dl-compact">
               </dl>
             </section>
             <h2>Method</h2>
             <section>
-              <h3 id="_format"><span class="symbol-name">_format</span><span class="signature"><span class="signature-params">(buttons)</span>&nbsp;&rarr; <span class="signature-returns"> Array of <a href="global.html#FormattedButtonSpec">FormattedButtonSpec</a></span></span></h3>
-              <p>Creates button array from simple array</p>
+              <h3 id="_validateInputs"><span class="symbol-name">_validateInputs</span><span class="signature"><span class="signature-params">(propName, propValue)</span>&nbsp;&rarr; <span class="signature-returns"> (string or number)</span></span></h3>
+              <p>Inner function to validate input values</p>
               <section>
-                <h4>
-                  Example
-                </h4>
-                <div>
-                  <pre class="prettyprint"><code>Input: [{id:&#x27;customId&#x27;,body:&#x27;button1&#x27;},{body:&#x27;button2&#x27;},{body:&#x27;button3&#x27;},{body:&#x27;button4&#x27;}]
-Returns: [{ buttonId:&#x27;customId&#x27;,buttonText:{&#x27;displayText&#x27;:&#x27;button1&#x27;},type: 1 },{buttonId:&#x27;n3XKsL&#x27;,buttonText:{&#x27;displayText&#x27;:&#x27;button2&#x27;},type:1},{buttonId:&#x27;NDJk0a&#x27;,buttonText:{&#x27;displayText&#x27;:&#x27;button3&#x27;},type:1}]</code></pre>
-                </div>
-              </section>
-              <section>
-                <h4>Parameter</h4>
+                <h4>Parameters</h4>
                 <table class="jsdoc-details-table">
                   <thead>
                     <tr>
@@ -204,15 +173,30 @@ Returns: [{ buttonId:&#x27;customId&#x27;,buttonText:{&#x27;displayText&#x27;:&#
                   <tbody>
                     <tr>
                       <td>
-                        <p>buttons</p>
+                        <p>propName</p>
                       </td>
                       <td>
-                        <p>Array of <a href="global.html#ButtonSpec">ButtonSpec</a></p>
+                        <p>string</p>
                       </td>
                       <td>
                         <p>&nbsp;</p>
                       </td>
                       <td>
+                        <p>The property name to validate the value of</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <p>propValue</p>
+                      </td>
+                      <td>
+                        <p>(string or number)</p>
+                      </td>
+                      <td>
+                        <p>&nbsp;</p>
+                      </td>
+                      <td>
+                        <p>The property value to validate</p>
                       </td>
                     </tr>
                   </tbody>
@@ -221,7 +205,9 @@ Returns: [{ buttonId:&#x27;customId&#x27;,buttonText:{&#x27;displayText&#x27;:&#
               <dl class="dl-compact">
                 <dt>Returns</dt>
                 <dd>
-                  <p><code>Array of <a href="global.html#FormattedButtonSpec">FormattedButtonSpec</a></code> </p>
+                  <p><code>(string or number)</code> 
+                  <p>The property value if a validation succeeded</p>
+                  </p>
                 </dd>
               </dl>
             </section>
