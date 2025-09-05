@@ -55,7 +55,7 @@ jobs:
 
     - name: Criação da nova branch
       run: |
-        if git show-ref --quiet refs/heads/temp-sync-branch;
+        if git show-ref --quiet refs/heads/temp-sync-branch; then
           git branch -D temp-sync-branch
         fi
         git checkout -b temp-sync-branch
