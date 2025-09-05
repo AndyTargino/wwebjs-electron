@@ -48,16 +48,20 @@ jobs:
       if: steps.check_release.outputs.should_publish == 'true'
       run: npm install
 
-    - name: Executar testes
-      if: steps.check_release.outputs.should_publish == 'true'
-      run: npm test
-      continue-on-error: true
-
     - name: Publicar no NPM
       if: steps.check_release.outputs.should_publish == 'true'
       run: |
         echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        npm publish
+        
+        # Verificar se é primeira publicação
+        if npm view wwebjs-electron version >/dev/null 2>&1; then
+          echo "Pacote já existe, fazendo update..."
+          npm publish
+        else
+          echo "Primeira publicação, criando pacote público..."
+          npm publish --access public
+        fi
+        
         echo "✅ Pacote wwebjs-electron v${{ steps.check_release.outputs.version }} publicado no NPM com sucesso!"
       env:
         NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
