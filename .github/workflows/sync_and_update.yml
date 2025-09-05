@@ -21,7 +21,7 @@ jobs:
       run: |
         LATEST_TAG=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/tags" | jq -r '[.[] | .name | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))][0]')
         echo "Última versão do whatsapp-web.js: $LATEST_TAG"
-        echo "::set-output name=version::$LATEST_TAG"
+        echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
@@ -33,7 +33,7 @@ jobs:
 
         if [ -z "$LATEST_LIB_VERSION" ]; then
           echo "Não foi possível obter a última versão estável da biblioteca. Abortando."
-          echo "::set-output name=should_continue::false"
+          echo "should_continue=false" >> $GITHUB_OUTPUT
           exit 0
         fi
 
@@ -47,17 +47,17 @@ jobs:
         # Compara as versões para ver se uma atualização é necessária
         if [ "$(printf '%s\n' "$CLEAN_LATEST_LIB_VERSION" "$CLEAN_MY_LATEST_VERSION" | sort -V | head -n1)" = "$CLEAN_MY_LATEST_VERSION" ] && [ "$CLEAN_LATEST_LIB_VERSION" != "$CLEAN_MY_LATEST_VERSION" ]; then
           echo "Nova versão do whatsapp-web.js encontrada: $LATEST_LIB_VERSION (a sua é $MY_LATEST_VERSION)"
-          echo "::set-output name=should_continue::true"
+          echo "should_continue=true" >> $GITHUB_OUTPUT
         else
           echo "Sua versão $MY_LATEST_VERSION está atualizada."
-          echo "::set-output name=should_continue::false"
+          echo "should_continue=false" >> $GITHUB_OUTPUT
         fi
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
     - name: Criação da nova branch
       run: |
-        if git show-ref --quiet refs/heads/temp-sync-branch; then
+        if git show-ref --quiet refs/heads/temp-sync-branch;
           git branch -D temp-sync-branch
         fi
         git checkout -b temp-sync-branch
@@ -77,7 +77,7 @@ jobs:
         PACKAGE_VERSION=$(jq -r .version whatsapp-web.js/package.json)
         jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
         FILE_PATH="src/Client.js"
-        sed -i 's|if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))|if (this.options.page) { page = this.options.page; browser = page.browser(); } else if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))|' $FILE_PATH
+        sed -i 's#if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))#if (this.options.page) { page = this.options.page; browser = page.browser(); } else if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))#' $FILE_PATH
     
     - name: Verificar se há commits novos
       id: check_commits
@@ -86,10 +86,10 @@ jobs:
         NEW_COMMITS=$(git log main..temp-sync-branch --oneline)
         if [ -z "$NEW_COMMITS" ]; then
           echo "Não há commits novos"
-          echo "::set-output name=has_changes::true"
+          echo "has_changes=false" >> $GITHUB_OUTPUT
         else
           echo "Há commits novos"
-          echo "::set-output name=has_changes::true"
+          echo "has_changes=true" >> $GITHUB_OUTPUT
         fi
 
     - name: Commit e Push
@@ -100,7 +100,7 @@ jobs:
         git add .
         git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
         git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
-        git pull origin main --rebase  # Update your branch with the latest changes from main
+        git pull origin main --rebase
         git push --set-upstream origin temp-sync-branch
       env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
