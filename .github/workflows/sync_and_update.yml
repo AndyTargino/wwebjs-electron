@@ -19,7 +19,7 @@ jobs:
     - name: Obter a última versão do whatsapp-web.js
       id: latest_version
       run: |
-        LATEST_TAG=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/tags" | jq -r '.[0].name')
+        LATEST_TAG=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/tags" | jq -r '[.[] | .name | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))][0]')
         echo "Última versão do whatsapp-web.js: $LATEST_TAG"
         echo "::set-output name=version::$LATEST_TAG"
       env:
@@ -30,22 +30,27 @@ jobs:
       run: |
         MY_LATEST_VERSION=$(curl --silent "https://api.github.com/repos/AndyTargino/wwebjs-electron/releases/latest" | jq -r .tag_name)
         LATEST_LIB_VERSION=${{ steps.latest_version.outputs.version }}
-        MOST_RECENT=$(printf "%s\n%s\n" "$MY_LATEST_VERSION" "$LATEST_LIB_VERSION" | sort -V | tail -1)
-        echo "Versão obtida: $MOST_RECENT"
-        echo "Minha versão: $MY_LATEST_VERSION"
-        if [[ "$MOST_RECENT" == "$MY_LATEST_VERSION" ]]; then
-        echo "AS VERSÕES SÃO IGUAIS"
+
+        if [ -z "$LATEST_LIB_VERSION" ]; then
+          echo "Não foi possível obter a última versão estável da biblioteca. Abortando."
           echo "::set-output name=should_continue::false"
-        else
-          echo "As versões são diferentes"
+          exit 0
+        fi
+
+        # Compara as versões para ver se uma atualização é necessária
+        if [ "$(printf '%s\n' "$LATEST_LIB_VERSION" "$MY_LATEST_VERSION" | sort -V | head -n1)" = "$MY_LATEST_VERSION" ] && [ "$LATEST_LIB_VERSION" != "$MY_LATEST_VERSION" ]; then
+          echo "Nova versão do whatsapp-web.js encontrada: $LATEST_LIB_VERSION (a sua é $MY_LATEST_VERSION)"
           echo "::set-output name=should_continue::true"
+        else
+          echo "Sua versão $MY_LATEST_VERSION está atualizada."
+          echo "::set-output name=should_continue::false"
         fi
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
     - name: Criação da nova branch
       run: |
-        if git show-ref --quiet refs/heads/temp-sync-branch; then
+        if git show-ref --quiet refs/heads/temp-sync-branch;
           git branch -D temp-sync-branch
         fi
         git checkout -b temp-sync-branch
