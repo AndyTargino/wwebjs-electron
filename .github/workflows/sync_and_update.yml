@@ -152,13 +152,7 @@ jobs:
         VERSION_TAG=${{ steps.latest_version.outputs.version }}
         echo "Criando release: $VERSION_TAG"
         gh release create "$VERSION_TAG" --title "$VERSION_TAG" --notes "Synchronized with whatsapp-web.js version $VERSION_TAG" --generate-notes
-        
-        # Remover arquivo de marcador se foi criado
-        if [ -f "SYNC_MARKER.md" ]; then
-          git rm SYNC_MARKER.md
-          git commit -m "Remove sync marker file"
-          git push origin main
-        fi
+        echo "✅ Release $VERSION_TAG criada com sucesso!"
       env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
