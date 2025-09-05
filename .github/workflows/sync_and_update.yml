@@ -37,14 +37,12 @@ jobs:
           exit 0
         fi
 
-        # Sanitiza as versões para um formato limpo (ex: 1.33.2) para garantir uma comparação robusta
         CLEAN_LATEST_LIB_VERSION=$(echo "$LATEST_LIB_VERSION" | sed -e 's/^v//' -e 's/^\.//')
         CLEAN_MY_LATEST_VERSION=$(echo "$MY_LATEST_VERSION" | sed -e 's/^v//' -e 's/^\.//')
 
         echo "Versão da lib (limpa): $CLEAN_LATEST_LIB_VERSION"
         echo "Minha versão (limpa): $CLEAN_MY_LATEST_VERSION"
 
-        # Compara as versões para ver se uma atualização é necessária
         if [ "$(printf '%s\n' "$CLEAN_LATEST_LIB_VERSION" "$CLEAN_MY_LATEST_VERSION" | sort -V | head -n1)" = "$CLEAN_MY_LATEST_VERSION" ] && [ "$CLEAN_LATEST_LIB_VERSION" != "$CLEAN_MY_LATEST_VERSION" ]; then
           echo "Nova versão do whatsapp-web.js encontrada: $LATEST_LIB_VERSION (a sua é $MY_LATEST_VERSION)"
           echo "should_continue=true" >> $GITHUB_OUTPUT
@@ -57,7 +55,7 @@ jobs:
 
     - name: Criação da nova branch
       run: |
-        if git show-ref --quiet refs/heads/temp-sync-branch; then
+        if git show-ref --quiet refs/heads/temp-sync-branch;
           git branch -D temp-sync-branch
         fi
         git checkout -b temp-sync-branch
@@ -78,22 +76,15 @@ jobs:
         jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
         FILE_PATH="src/Client.js"
         sed -i 's#if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))#if (this.options.page) { page = this.options.page; browser = page.browser(); } else if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))#' $FILE_PATH
-    
-    - name: Verificar se há commits novos
-      id: check_commits
+
+    - name: Verificar se há alterações nos arquivos
+      id: check_diff
       if: steps.check_version.outputs.should_continue == 'true'
       run: |
-        NEW_COMMITS=$(git log main..temp-sync-branch --oneline)
-        if [ -z "$NEW_COMMITS" ]; then
-          echo "Não há commits novos"
-          echo "has_changes=false" >> $GITHUB_OUTPUT
-        else
-          echo "Há commits novos"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
-        fi
+        git diff --quiet && echo "has_changes=false" >> $GITHUB_OUTPUT || echo "has_changes=true" >> $GITHUB_OUTPUT
 
     - name: Commit e Push
-      if: steps.check_version.outputs.should_continue == 'true'
+      if: steps.check_version.outputs.should_continue == 'true' && steps.check_diff.outputs.has_changes == 'true'
       run: |
         git config user.email "andytargino@outlook.com"
         git config user.name "AndyTargino"
@@ -105,14 +96,8 @@ jobs:
       env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
-    - name: Verificar se deve continuar com a mesclagem
-      run: |
-        echo "O codigo deve continuar?"
-        echo "should_continue: ${{ steps.check_version.outputs.should_continue }}"
-        echo "has_changes: ${{ steps.check_commits.outputs.has_changes }}"
-
     - name: Criar e mesclar Pull Request
-      if: steps.check_version.outputs.should_continue == 'true' && steps.check_commits.outputs.has_changes == 'true'
+      if: steps.check_version.outputs.should_continue == 'true' && steps.check_diff.outputs.has_changes == 'true'
       run: |
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config --global user.name "GitHub Actions"
@@ -123,7 +108,7 @@ jobs:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
     - name: Criar release
-      if: steps.check_version.outputs.should_continue == 'true' && steps.check_commits.outputs.has_changes == 'true'
+      if: steps.check_version.outputs.should_continue == 'true' && steps.check_diff.outputs.has_changes == 'true'
       run: |
         VERSION=$(jq -r .version package.json)
         gh release create $VERSION
