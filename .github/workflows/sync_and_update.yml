@@ -19,7 +19,7 @@ jobs:
     - name: Obter a última versão do whatsapp-web.js
       id: latest_version
       run: |
-        LATEST_TAG=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/releases/latest" | jq -r .tag_name)
+        LATEST_TAG=$(curl --silent "https://api.github.com/repos/pedroslopez/whatsapp-web.js/tags" | jq -r '.[0].name')
         echo "Última versão do whatsapp-web.js: $LATEST_TAG"
         echo "::set-output name=version::$LATEST_TAG"
       env:
