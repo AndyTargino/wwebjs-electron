@@ -119,7 +119,16 @@ jobs:
         git config user.email "andytargino@outlook.com"
         git config user.name "AndyTargino"
         git add .
-        git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
+        
+        # Fazer commit mesmo se não houver mudanças (para casos onde só a release não existe)
+        if git diff --staged --quiet; then
+          echo "# Release sync for ${{ steps.latest_version.outputs.version }}" >> SYNC_MARKER.md
+          git add SYNC_MARKER.md
+          git commit -m "Sync marker for release ${{ steps.latest_version.outputs.version }}"
+        else
+          git commit -m "Synchronized with upstream and applied custom changes"
+        fi
+        
         git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
         git pull origin main --rebase
         git push --force --set-upstream origin temp-sync-branch
@@ -143,6 +152,13 @@ jobs:
         VERSION_TAG=${{ steps.latest_version.outputs.version }}
         echo "Criando release: $VERSION_TAG"
         gh release create "$VERSION_TAG" --title "$VERSION_TAG" --notes "Synchronized with whatsapp-web.js version $VERSION_TAG" --generate-notes
+        
+        # Remover arquivo de marcador se foi criado
+        if [ -f "SYNC_MARKER.md" ]; then
+          git rm SYNC_MARKER.md
+          git commit -m "Remove sync marker file"
+          git push origin main
+        fi
       env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
