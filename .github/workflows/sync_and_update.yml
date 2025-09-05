@@ -96,7 +96,22 @@ jobs:
       id: check_diff
       if: steps.check_version.outputs.should_continue == 'true'
       run: |
-        git diff --quiet && echo "has_changes=false" >> $GITHUB_OUTPUT || echo "has_changes=true" >> $GITHUB_OUTPUT
+        if git diff --quiet; then
+          # Verificar se a release da versão da lib existe
+          LATEST_LIB_VERSION=${{ steps.latest_version.outputs.version }}
+          RELEASE_EXISTS=$(gh release view "$LATEST_LIB_VERSION" --json tagName --jq '.tagName' 2>/dev/null || echo "not_found")
+          
+          if [ "$RELEASE_EXISTS" = "not_found" ]; then
+            echo "Nenhuma mudança no código, mas release não existe. Forçando criação."
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
     - name: Commit e Push
       if: steps.check_version.outputs.should_continue == 'true' && steps.check_diff.outputs.has_changes == 'true'
