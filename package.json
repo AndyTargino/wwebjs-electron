@@ -1,6 +1,6 @@
 {
   "name": "wwebjs-electron",
-  "version": "1.33.2",
+  "version": "1.33.3",
   "description": "Library for interacting with the WhatsApp Web API through electron",
   "main": "./index.js",
   "typings": "./index.d.ts",
