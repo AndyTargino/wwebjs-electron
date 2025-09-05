@@ -92,7 +92,7 @@ jobs:
         git commit -m "Synchronized with upstream and applied custom changes" || echo "No changes to commit"
         git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
         git pull origin main --rebase
-        git push --set-upstream origin temp-sync-branch
+        git push --force --set-upstream origin temp-sync-branch
       env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
