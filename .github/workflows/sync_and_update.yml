@@ -75,7 +75,7 @@ jobs:
         PACKAGE_VERSION=$(jq -r .version whatsapp-web.js/package.json)
         jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
         FILE_PATH="src/Client.js"
-        sed -i 's#if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))#if (this.options.page) { page = this.options.page; browser = page.browser(); } else if (puppeteerOpts && (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))#' $FILE_PATH
+        sed -i 's/if (puppeteerOpts && (puppeteerOpts\.browserWSEndpoint || puppeteerOpts\.browserURL))/if (this.options.page) {\n            page = this.options.page;\n            browser = page.browser();\n        } else if (puppeteerOpts \&\& (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))/' $FILE_PATH
 
     - name: Verificar se há alterações nos arquivos
       id: check_diff
@@ -112,7 +112,7 @@ jobs:
       run: |
         VERSION_TAG=${{ steps.latest_version.outputs.version }}
         echo "Criando release: $VERSION_TAG"
-        gh release create "$VERSION_TAG" --title "$VERSION_TAG" --notes "Synchronized with whatsapp-web.js version $VERSION_TAG"
+        gh release create "$VERSION_TAG" --title "$VERSION_TAG" --notes "Synchronized with whatsapp-web.js version $VERSION_TAG" --generate-notes
       env:
           GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
 
