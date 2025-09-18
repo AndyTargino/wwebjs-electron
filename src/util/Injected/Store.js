@@ -103,7 +103,7 @@ exports.ExposeStore = () => {
     window.Store.UploadUtils = window.require('WAWebUploadManager');
     window.Store.WAWebStreamModel = window.require('WAWebStreamModel');
     window.Store.FindOrCreateChat = window.require('WAWebFindChatAction');
-    
+
     window.Store.Settings = {
         ...window.require('WAWebUserPrefsGeneral'),
         ...window.require('WAWebUserPrefsNotifications'),
@@ -213,7 +213,7 @@ exports.ExposeStore = () => {
     window.injectToFunction = (target, callback) => {
         try {
             let module = window.require(target.module);
-            if (!module) return; 
+            if (!module) return;
 
             const path = target.function.split('.');
             const funcName = path.pop();
@@ -243,5 +243,5 @@ exports.ExposeStore = () => {
 
     window.injectToFunction({ module: 'WAWebE2EProtoUtils', function: 'typeAttributeFromProtobuf' }, (func, ...args) => { const [proto] = args; return proto.locationMessage || proto.groupInviteMessage ? 'text' : func(...args); });
 
-    window.injectToFunction({ module: 'WAWebLid1X1MigrationGating', function: 'Lid1X1MigrationUtils.isLidMigrated' }, () => false);
+    window.injectToFunction({ module: 'WAWebLid1X1MigrationGating', function: 'Lid1X1MigrationUtils.isLidMigrated' }, (func, ...args) => { try { return func(...args); } catch { return false; } });
 };
