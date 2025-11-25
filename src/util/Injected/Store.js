@@ -64,7 +64,10 @@ exports.ExposeStore = () => {
     window.Store.EditMessage = window.require('WAWebSendMessageEditAction');
     window.Store.SendSeen = window.require('WAWebUpdateUnreadChatAction');
     window.Store.User = window.require('WAWebUserPrefsMeUser');
-    window.Store.ContactMethods = window.require('WAWebContactGetters');
+    window.Store.ContactMethods = {
+        ...window.require('WAWebContactGetters'),
+        ...window.require('WAWebFrontendContactGetters')
+    };
     window.Store.UserConstructor = window.require('WAWebWid');
     window.Store.Validators = window.require('WALinkify');
     window.Store.WidFactory = window.require('WAWebWidFactory');
@@ -104,7 +107,7 @@ exports.ExposeStore = () => {
     window.Store.CustomerNoteUtils = window.require('WAWebNoteAction');
     window.Store.BusinessGatingUtils = window.require('WAWebBizGatingUtils');
     window.Store.PollsVotesSchema = require('WAWebPollsVotesSchema');
-    
+
     window.Store.Settings = {
         ...window.require('WAWebUserPrefsGeneral'),
         ...window.require('WAWebUserPrefsNotifications'),
@@ -218,7 +221,7 @@ exports.ExposeStore = () => {
     window.injectToFunction = (target, callback) => {
         try {
             let module = window.require(target.module);
-            if (!module) return; 
+            if (!module) return;
 
             const path = target.function.split('.');
             const funcName = path.pop();
