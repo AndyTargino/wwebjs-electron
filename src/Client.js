@@ -97,7 +97,7 @@ class Client extends EventEmitter {
      */
     async inject() {
                
-        if(this.options.authTimeoutMs === undefined){
+        if(this?.options?.authTimeoutMs === undefined || this?.options?.authTimeoutMs==0){
             this.options.authTimeoutMs = 30000;
         }
         let start = Date.now();
