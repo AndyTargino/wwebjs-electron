@@ -16,7 +16,7 @@ exports.LoadUtils = () => {
             await window.Store.SendSeen.markSeen(chat);
             window.Store.WAWebStreamModel.Stream.markUnavailable();
             return true;
-
+        };
         return false;
     };
 
