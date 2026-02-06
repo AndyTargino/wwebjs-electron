@@ -121,7 +121,8 @@ exports.ExposeStore = () => {
     };
     window.Store.NumberInfo = {
         ...window.require('WAPhoneUtils'),
-        ...window.require('WAPhoneFindCC')
+        ...window.require('WAPhoneFindCC'),
+        ...window.require('WAWebPhoneUtils')
     };
     window.Store.ForwardUtils = {
         ...window.require('WAWebChatForwardMessage')
@@ -233,7 +234,7 @@ exports.ExposeStore = () => {
     window.injectToFunction = (target, callback) => {
         try {
             let module = window.require(target.module);
-            if (!module) return; 
+            if (!module) return;
 
             const path = target.function.split('.');
             const funcName = path.pop();
