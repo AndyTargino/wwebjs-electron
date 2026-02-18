@@ -1,0 +1,132 @@
+name: Sync and Update Main
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync_and_update_main:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout wwebjs-electron
+      uses: actions/checkout@v4
+      with:
+        repository: AndyTargino/wwebjs-electron
+        fetch-depth: 0
+        token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+
+    - name: Obter último commit da main do whatsapp-web.js
+      id: upstream_info
+      run: |
+        UPSTREAM_SHA=$(git ls-remote https://github.com/pedroslopez/whatsapp-web.js.git refs/heads/main | cut -f1)
+        UPSTREAM_SHORT_SHA=${UPSTREAM_SHA:0:7}
+        echo "Upstream main SHA: $UPSTREAM_SHA"
+        echo "Upstream main short SHA: $UPSTREAM_SHORT_SHA"
+        echo "sha=$UPSTREAM_SHA" >> $GITHUB_OUTPUT
+        echo "short_sha=$UPSTREAM_SHORT_SHA" >> $GITHUB_OUTPUT
+
+    - name: Verificar se já está sincronizado
+      id: check_sync
+      run: |
+        UPSTREAM_SHA=${{ steps.upstream_info.outputs.sha }}
+        LAST_SYNCED_SHA=""
+        if [ -f .upstream-sync-sha ]; then
+          LAST_SYNCED_SHA=$(cat .upstream-sync-sha)
+        fi
+
+        echo "Último SHA sincronizado: $LAST_SYNCED_SHA"
+        echo "SHA atual do upstream: $UPSTREAM_SHA"
+
+        if [ "$LAST_SYNCED_SHA" = "$UPSTREAM_SHA" ]; then
+          echo "Já está sincronizado com o upstream main ($UPSTREAM_SHA)"
+          echo "should_continue=false" >> $GITHUB_OUTPUT
+        else
+          echo "Novas alterações detectadas no upstream main"
+          echo "should_continue=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Criação da nova branch
+      if: steps.check_sync.outputs.should_continue == 'true'
+      run: |
+        if git show-ref --quiet refs/heads/temp-sync-main-branch; then
+          git branch -D temp-sync-main-branch
+        fi
+        git checkout -b temp-sync-main-branch
+
+    - name: Clonar upstream main
+      if: steps.check_sync.outputs.should_continue == 'true'
+      run: |
+        git clone --depth 1 --branch main https://github.com/pedroslopez/whatsapp-web.js.git whatsapp-web-js-upstream
+
+    - name: Copiar arquivos do upstream e remover diretório temporário
+      if: steps.check_sync.outputs.should_continue == 'true'
+      run: |
+        rsync -a --exclude '.git/' --exclude 'README.md' --exclude 'package.json' --exclude '.eslintrc.json' --exclude '.github/' whatsapp-web-js-upstream/ ./
+
+    - name: Aplicar modificações customizadas
+      if: steps.check_sync.outputs.should_continue == 'true'
+      run: |
+        # Atualizar versão do package.json upstream
+        PACKAGE_VERSION=$(jq -r .version whatsapp-web-js-upstream/package.json)
+        jq '.version = $newVersion' --arg newVersion "$PACKAGE_VERSION" package.json > temp.json && mv temp.json package.json
+
+        # Aplicar modificação do Puppeteer/Electron no Client.js
+        FILE_PATH="src/Client.js"
+        sed -i 's/if (puppeteerOpts && (puppeteerOpts\.browserWSEndpoint || puppeteerOpts\.browserURL))/if (this.options.page) {\n            page = this.options.page;\n            browser = page.browser();\n        } else if (puppeteerOpts \&\& (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL))/' $FILE_PATH
+
+        # Registrar o SHA do upstream sincronizado
+        echo "${{ steps.upstream_info.outputs.sha }}" > .upstream-sync-sha
+
+        # Limpar diretório temporário
+        rm -rf whatsapp-web-js-upstream
+
+    - name: Verificar se há alterações nos arquivos
+      id: check_diff
+      if: steps.check_sync.outputs.should_continue == 'true'
+      run: |
+        git add -A
+        if git diff --staged --quiet; then
+          echo "Nenhuma alteração detectada nos arquivos"
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+        else
+          echo "Alterações detectadas"
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit e Push
+      if: steps.check_sync.outputs.should_continue == 'true' && steps.check_diff.outputs.has_changes == 'true'
+      run: |
+        git config user.email "andytargino@outlook.com"
+        git config user.name "AndyTargino"
+        git commit -m "Sync with whatsapp-web.js main (${{ steps.upstream_info.outputs.short_sha }})"
+        git remote set-url origin https://${{ secrets.RELEASE_GITHUB_TOKEN }}@github.com/AndyTargino/wwebjs-electron.git
+        git pull origin main --rebase
+        git push --force --set-upstream origin temp-sync-main-branch
+      env:
+        GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+
+    - name: Criar e mesclar Pull Request
+      if: steps.check_sync.outputs.should_continue == 'true' && steps.check_diff.outputs.has_changes == 'true'
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "GitHub Actions"
+        git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/AndyTargino/wwebjs-electron.git
+        PR_ID=$(gh pr create --base main --head temp-sync-main-branch --title "Sync with whatsapp-web.js main (${{ steps.upstream_info.outputs.short_sha }})" --body "Sincronizado com a branch main do whatsapp-web.js (commit: ${{ steps.upstream_info.outputs.sha }})" | grep -oP 'github.com/.+/pull/\K\d+')
+        gh pr merge $PR_ID --merge
+      env:
+        GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+
+    - name: Excluir branch temporária
+      if: steps.check_sync.outputs.should_continue == 'true'
+      run: |
+        if git ls-remote --exit-code origin temp-sync-main-branch >/dev/null 2>&1; then
+          git push origin --delete temp-sync-main-branch || echo "Falha ao deletar branch, mas continuando..."
+          echo "Branch temp-sync-main-branch deletada com sucesso"
+        else
+          echo "Branch temp-sync-main-branch não existe no remote, pulando exclusão"
+        fi
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
