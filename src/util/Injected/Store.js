@@ -234,7 +234,7 @@ exports.ExposeStore = () => {
     window.injectToFunction = (target, callback) => {
         try {
             let module = window.require(target.module);
-            if (!module) return;
+            if (!module) return; 
 
             const path = target.function.split('.');
             const funcName = path.pop();
