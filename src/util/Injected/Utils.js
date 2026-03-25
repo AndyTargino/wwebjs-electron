@@ -1080,9 +1080,19 @@ exports.LoadUtils = () => {
         const contacts = window
             .require('WAWebCollections')
             .Contact.getModelsArray();
-        return contacts.map((contact) =>
-            window.WWebJS.getContactModel(contact),
-        );
+        return contacts.map(async (contact) => {
+            if (contact.isBusiness || contact.isEnterprise) {
+                const contactWid = window
+                    .require('WAWebWidFactory')
+                    .createWid(contact.id);
+                const bizProfile = await window
+                    .require('WAWebCollections')
+                    .BusinessProfile.find(contactWid);
+                bizProfile.profileOptions &&
+                    (contact.businessProfile = bizProfile);
+            }
+            return window.WWebJS.getContactModel(contact);
+        });
     };
 
     window.WWebJS.mediaInfoToFile = ({ data, mimetype, filename }) => {
