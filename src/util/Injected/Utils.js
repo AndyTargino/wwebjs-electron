@@ -333,7 +333,7 @@ exports.LoadUtils = () => {
                             .vcardGetNameFromParsed(parsed),
                     };
                 }
-            } catch (_) {
+            } catch (ignoredError) {
                 // not a vcard
             }
         }
@@ -361,7 +361,7 @@ exports.LoadUtils = () => {
                 content = options.buttons.body;
                 caption = content;
             } else {
-                caption = options.caption ? options.caption : ' '; //Caption can't be empty
+                caption = options.caption ? options.caption : ' '; // Caption can't be empty
             }
             buttonOptions = {
                 productHeaderImageRejected: false,
@@ -857,7 +857,7 @@ exports.LoadUtils = () => {
                         .require('WAWebCollections')
                         .WAWebNewsletterCollection.find(chatWid);
                 }
-            } catch (err) {
+            } catch (ignoredError) {
                 chat = null;
             }
         } else {
@@ -1175,7 +1175,7 @@ exports.LoadUtils = () => {
             );
 
             return waveform;
-        } catch (e) {
+        } catch (ignoredError) {
             return undefined;
         }
     };
@@ -1412,7 +1412,7 @@ exports.LoadUtils = () => {
                         return base64Image;
                     }
                 }
-            } catch (error) {
+            } catch (ignoredError) {
                 /* empty */
             }
         }
@@ -1449,7 +1449,7 @@ exports.LoadUtils = () => {
                 rpcResult.value.addParticipant[0]
                     .addParticipantsParticipantAddedOrNonRegisteredWaUserParticipantErrorLidResponseMixinGroup
                     .value.addParticipantsParticipantMixins;
-        } catch (err) {
+        } catch (ignoredError) {
             data.code = 400;
             return data;
         }
@@ -1612,7 +1612,7 @@ exports.LoadUtils = () => {
                     ));
             }
             return result;
-        } catch (err) {
+        } catch (ignoredError) {
             return [];
         }
     };
