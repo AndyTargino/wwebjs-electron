@@ -19,9 +19,9 @@
 
 ## About
 
-wwebjs-electron is inspired by (and kept in sync with) [whatsapp-web.js][wwebjs], adapted to run natively inside [Electron][electron] applications — **with interface**. Instead of spawning a hidden Chromium through Puppeteer, it loads WhatsApp Web straight into a `BrowserWindow` or `BrowserView` of your app, so your users can see and interact with WhatsApp while your code drives it through the same powerful API of whatsapp-web.js. Puppeteer attaches to Electron's own Chromium over CDP (Chrome DevTools Protocol) — no `puppeteer-in-electron`, no `puppeteer-core`, no second browser.
+wwebjs-electron is inspired by (and kept in sync with) [whatsapp-web.js][wwebjs], adapted to run natively inside [Electron][electron] applications, **with interface**. Instead of spawning a hidden Chromium through Puppeteer, it loads WhatsApp Web straight into a `BrowserWindow` or `BrowserView` of your app, so your users can see and interact with WhatsApp while your code drives it through the same powerful API of whatsapp-web.js. Puppeteer attaches to Electron's own Chromium over CDP (Chrome DevTools Protocol): no `puppeteer-in-electron`, no `puppeteer-core`, no second browser.
 
-Everything else — events, authentication strategies, messages, groups — behaves exactly like whatsapp-web.js. If you don't pass the `electron` option, it behaves identically to the original library (spawning its own browser), so it also works outside Electron.
+Everything else (events, authentication strategies, messages, groups) behaves exactly like whatsapp-web.js. If you don't pass the `electron` option, it behaves identically to the original library (spawning its own browser), so it also works outside Electron.
 
 ## Links
 
@@ -41,10 +41,10 @@ yarn add wwebjs-electron
 pnpm add wwebjs-electron
 ```
 
-No extra dependencies are needed — `puppeteer-in-electron` and `puppeteer-core` are **not** required.
+No extra dependencies are needed: `puppeteer-in-electron` and `puppeteer-core` are **not** required.
 
 > [!TIP]
-> The bundled `puppeteer` dependency downloads a standalone Chromium (~170MB) during `npm install`. It is only used in standalone mode (outside Electron) — inside Electron the client attaches to Electron's own Chromium. If your app only runs inside Electron, skip the download with the environment variable `PUPPETEER_SKIP_DOWNLOAD=true` (or a `.puppeteerrc.cjs` with `{ skipDownload: true }`).
+> The bundled `puppeteer` dependency downloads a standalone Chromium (~170MB) during `npm install`. It is only used in standalone mode (outside Electron); inside Electron the client attaches to Electron's own Chromium. If your app only runs inside Electron, skip the download with the environment variable `PUPPETEER_SKIP_DOWNLOAD=true` (or a `.puppeteerrc.cjs` with `{ skipDownload: true }`).
 
 ## Example usage
 
@@ -155,12 +155,12 @@ app.whenReady().then(async () => {
 ```
 
 > [!NOTE]
-> `electron: { view }` accepts anything that exposes a `webContents` — so newer
+> `electron: { view }` accepts anything that exposes a `webContents`, so newer
 > `WebContentsView` instances work the same way as `BrowserView`.
 
 ### Standalone (compatible with the original whatsapp-web.js)
 
-Without the `electron` option, it works exactly like upstream — including outside Electron:
+Without the `electron` option, it works exactly like upstream, including outside Electron:
 
 ```js
 const { Client } = require('wwebjs-electron');
@@ -248,10 +248,10 @@ Something missing? Make an issue and let us know!
 When required from an Electron main process, wwebjs-electron appends `--remote-debugging-port=0` to Chromium's command line. Once your app is ready, `initialize()`:
 
 1. Reads the debugging port Chromium wrote to `<userData>/DevToolsActivePort`;
-2. Connects Puppeteer to Electron's own Chromium over CDP (`puppeteer.connect` — no second browser is spawned);
+2. Connects Puppeteer to Electron's own Chromium over CDP (`puppeteer.connect`, so no second browser is spawned);
 3. Finds the Puppeteer `Page` that corresponds to your `BrowserWindow`/`BrowserView` and loads WhatsApp Web into it.
 
-This project stays in sync with upstream [whatsapp-web.js][wwebjs] releases automatically — each release here mirrors the upstream release of the same version, with the Electron integration applied on top.
+This project stays in sync with upstream [whatsapp-web.js][wwebjs] releases automatically: each release here mirrors the upstream release of the same version, with the Electron integration applied on top.
 
 ## Supporting the project
 
