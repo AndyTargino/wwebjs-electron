@@ -1,160 +1,182 @@
 <div align="center">
-    <br />
     <p>
-        <a href="https://wwebjs.dev"><img src="https://github.com/wwebjs/logos/blob/main/4_Full%20Logo%20Lockup_Small/small_banner_blue.png?raw=true" title="whatsapp-web.js" alt="WWebJS Website" width="500" /></a>
+        <a href="https://github.com/AndyTargino/wwebjs-electron">
+            <img src="https://raw.githubusercontent.com/AndyTargino/wwebjs-electron/main/.github/images/banner.png"
+                title="wwebjs-electron" alt="wwebjs-electron" />
+        </a>
     </p>
-    <br />
     <p>
-		<a href="https://www.npmjs.com/package/wwebjs-electron"><img src="https://img.shields.io/npm/v/wwebjs-electron.svg" alt="npm" /></a>
-        <a href="https://depfu.com/github/pedroslopez/whatsapp-web.js?project_id=9765"><img src="https://badges.depfu.com/badges/4a65a0de96ece65fdf39e294e0c8dcba/overview.svg" alt="Depfu" /></a>
-        <img src="https://img.shields.io/badge/WhatsApp_Web-2.3000.1017054665-brightgreen.svg" alt="WhatsApp_Web 2.2346.52" />
-        <a href="https://discord.gg/H7DqQs4"><img src="https://img.shields.io/discord/698610475432411196.svg?logo=discord" alt="Discord server" /></a>
-	</p>
-    <br />
+        <a href="https://www.npmjs.com/package/wwebjs-electron"><img
+                src="https://img.shields.io/npm/v/wwebjs-electron.svg" alt="npm" /></a>
+        <a href="https://www.npmjs.com/package/wwebjs-electron"><img alt="NPM Downloads"
+                src="https://img.shields.io/npm/d18m/wwebjs-electron" /></a>
+        <a href="https://github.com/AndyTargino/wwebjs-electron/graphs/contributors"><img alt="GitHub contributors"
+                src="https://img.shields.io/github/contributors-anon/AndyTargino/wwebjs-electron" /></a>
+        <a href="https://discord.wwebjs.dev"><img
+                src="https://img.shields.io/discord/698610475432411196.svg?logo=discord" alt="Discord server" /></a>
+    </p>
 </div>
 
 ## About
-**A WhatsApp API client optimized for Electron applications**
 
-wwebjs-electron is a fork of whatsapp-web.js with native support for Electron host applications. It embeds WhatsApp Web directly inside an Electron `BrowserWindow` or `BrowserView` — without spawning a separate Chromium instance and without relying on `puppeteer-in-electron`. Puppeteer attaches to Electron's own Chromium over CDP (Chrome DevTools Protocol), providing access to all WhatsApp Web features while maintaining the security and performance benefits of Electron.
+wwebjs-electron is inspired by (and kept in sync with) [whatsapp-web.js][wwebjs], adapted to run natively inside [Electron][electron] applications — **with interface**. Instead of spawning a hidden Chromium through Puppeteer, it loads WhatsApp Web straight into a `BrowserWindow` or `BrowserView` of your app, so your users can see and interact with WhatsApp while your code drives it through the same powerful API of whatsapp-web.js. Puppeteer attaches to Electron's own Chromium over CDP (Chrome DevTools Protocol) — no `puppeteer-in-electron`, no `puppeteer-core`, no second browser.
 
-> [!IMPORTANT]
-> **It is not guaranteed you will not be blocked by using this method. WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe.**
+Everything else — events, authentication strategies, messages, groups — behaves exactly like whatsapp-web.js. If you don't pass the `electron` option, it behaves identically to the original library (spawning its own browser), so it also works outside Electron.
 
 ## Links
 
-* [Website][website]
-* [Guide][guide] ([source][guide-source]) _(work in progress)_
-* [Documentation][documentation] ([source][documentation-source])
-* [WWebJS Discord][discord]
-* [GitHub][gitHub]
-* [npm][npm]
+- [GitHub][gitHub]
+- [Guide][guide] ([source][guide-source])
+- [Documentation][documentation] ([source][documentation-source])
+- [Discord Server][discord]
+- [npm][npm]
 
 ## Installation
 
-The module is now available on npm! `npm i wwebjs-electron`
+**Node.js `v18.0.0` or higher and Electron `v20` or higher are required.**
 
-No extra dependencies are needed for Electron integration — `puppeteer-in-electron` and `puppeteer-core` are **not** required anymore.
+```sh
+npm install wwebjs-electron
+yarn add wwebjs-electron
+pnpm add wwebjs-electron
+```
+
+No extra dependencies are needed — `puppeteer-in-electron` and `puppeteer-core` are **not** required.
 
 > [!TIP]
-> The bundled `puppeteer` dependency downloads a standalone Chromium (~170MB) during `npm install`. That browser is only used in standalone mode (outside Electron) — when the `electron` option is set, the client attaches to Electron's own Chromium instead. If your app only runs inside Electron, you can skip the download by setting the environment variable `PUPPETEER_SKIP_DOWNLOAD=true` before `npm install` (or via a `.puppeteerrc.cjs` with `{ skipDownload: true }`).
-
-> [!NOTE]
-> **Node ``v18+`` is required.**
-
-## QUICK STEPS TO UPGRADE NODE
-
-### Windows
-
-#### Manual
-Just get the latest LTS from the [official node website][nodejs].
-
-#### npm
-```powershell
-sudo npm install -g n
-sudo n stable
-```
-
-#### Choco
-```powershell
-choco install nodejs-lts
-```
-
-#### Winget
-```powershell
-winget install OpenJS.NodeJS.LTS
-```
-
-### Ubuntu / Debian
-```bash
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - &&\
-sudo apt-get install -y nodejs
-```
+> The bundled `puppeteer` dependency downloads a standalone Chromium (~170MB) during `npm install`. It is only used in standalone mode (outside Electron) — inside Electron the client attaches to Electron's own Chromium. If your app only runs inside Electron, skip the download with the environment variable `PUPPETEER_SKIP_DOWNLOAD=true` (or a `.puppeteerrc.cjs` with `{ skipDownload: true }`).
 
 ## Example usage
 
-### Basic Electron Implementation
-
 > [!IMPORTANT]
-> `wwebjs-electron` must be `require`d in your **main process before `app.whenReady()`**, so Chromium's remote debugging switch can be appended in time.
+> `wwebjs-electron` must be `require`d in your **main process before `app.whenReady()`**, so Chromium's remote debugging switch can be appended in time. Just keep the `require` at the top of your main process file and you're fine.
+
+### Inside an Electron `BrowserWindow`
+
+WhatsApp Web takes over a whole window of your app:
 
 ```js
-// Require wwebjs-electron BEFORE app.whenReady() (top of your main process file)
-const { app, BrowserWindow, BrowserView } = require('electron');
-const { Client, LocalAuth } = require('wwebjs-electron');
+// main.js (Electron main process)
+const { app, BrowserWindow } = require('electron'); // eslint-disable-line
+const { Client, LocalAuth } = require('wwebjs-electron'); // required BEFORE app.whenReady()
 
 app.whenReady().then(async () => {
-    // Create main window
-    const mainWindow = new BrowserWindow({
+    const whatsappWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         webPreferences: {
             nodeIntegration: false,
-            contextIsolation: true
-        }
+            contextIsolation: true,
+        },
     });
 
-    // Create BrowserView for WhatsApp
-    const whatsappView = new BrowserView({
-        webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: true
-        }
-    });
-
-    // Add BrowserView to window
-    mainWindow.addBrowserView(whatsappView);
-    mainWindow.setBrowserView(whatsappView);
-
-    // Set BrowserView bounds
-    const { width, height } = mainWindow.getContentBounds();
-    whatsappView.setBounds({ x: 0, y: 0, width, height });
-
-    // Create WhatsApp client attached to the BrowserView
-    // (you can also pass a whole window: electron: { window: mainWindow })
     const client = new Client({
         authStrategy: new LocalAuth(),
-        electron: { view: whatsappView }
+        electron: { window: whatsappWindow },
     });
 
     client.on('qr', (qr) => {
+        // The QR code is also rendered visually inside the window,
+        // so the user can simply scan it there!
         console.log('QR RECEIVED', qr);
-        // Display QR code to user
     });
 
     client.on('ready', () => {
-        console.log('WhatsApp Client is ready!');
+        console.log('Client is ready!');
     });
 
-    client.on('message', async (msg) => {
-        if (msg.body === '!ping') {
-            await msg.reply('🤖 Pong!');
+    client.on('message', (msg) => {
+        if (msg.body == '!ping') {
+            msg.reply('pong');
         }
     });
 
-    // Initialize client — WhatsApp Web is loaded into the BrowserView
+    // initialize() loads WhatsApp Web into the window
     await client.initialize();
 });
 ```
 
-### Standalone Usage (Compatible with original whatsapp-web.js)
+### Inside an Electron `BrowserView`
+
+WhatsApp Web lives in a panel of your app, side by side with your own UI (a sidebar, a dashboard, etc.):
 
 ```js
-const { Client, LocalAuth } = require('wwebjs-electron');
+// main.js (Electron main process)
+const { app, BrowserWindow, BrowserView } = require('electron'); // eslint-disable-line
+const { Client, LocalAuth } = require('wwebjs-electron'); // required BEFORE app.whenReady()
 
-const client = new Client({
-    authStrategy: new LocalAuth()
+const SIDEBAR_WIDTH = 300; // space reserved for your own UI
+
+app.whenReady().then(async () => {
+    const mainWindow = new BrowserWindow({ width: 1400, height: 900 });
+
+    // Your own interface (menu, contact list, CRM, whatever you build)
+    mainWindow.loadFile('index.html');
+
+    // The panel that will host WhatsApp Web
+    const whatsappView = new BrowserView({
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+        },
+    });
+    mainWindow.addBrowserView(whatsappView);
+
+    const fitView = () => {
+        const { width, height } = mainWindow.getContentBounds();
+        whatsappView.setBounds({
+            x: SIDEBAR_WIDTH,
+            y: 0,
+            width: width - SIDEBAR_WIDTH,
+            height,
+        });
+    };
+    fitView();
+    mainWindow.on('resize', fitView);
+
+    const client = new Client({
+        authStrategy: new LocalAuth(),
+        electron: { view: whatsappView },
+    });
+
+    client.on('ready', () => {
+        console.log('Client is ready!');
+    });
+
+    client.on('message', async (msg) => {
+        if (msg.body == '!ping') {
+            await msg.reply('pong');
+        }
+    });
+
+    // initialize() loads WhatsApp Web into the BrowserView
+    await client.initialize();
 });
+```
+
+> [!NOTE]
+> `electron: { view }` accepts anything that exposes a `webContents` — so newer
+> `WebContentsView` instances work the same way as `BrowserView`.
+
+### Standalone (compatible with the original whatsapp-web.js)
+
+Without the `electron` option, it works exactly like upstream — including outside Electron:
+
+```js
+const { Client } = require('wwebjs-electron');
+const qrcode = require('qrcode-terminal');
+
+const client = new Client();
 
 client.on('qr', (qr) => {
-    console.log('QR RECEIVED', qr);
+    qrcode.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
     console.log('Client is ready!');
 });
 
-client.on('message', msg => {
+client.on('message', (msg) => {
     if (msg.body == '!ping') {
         msg.reply('pong');
     }
@@ -163,31 +185,12 @@ client.on('message', msg => {
 client.initialize();
 ```
 
-Take a look at [example.js][examples] for another examples with additional use cases.  
-For further details on saving and restoring sessions, explore the provided [Authentication Strategies][auth-strategies].
-
-## Key Differences from whatsapp-web.js
-
-wwebjs-electron adds a single `electron` option to `ClientOptions`:
-
-```ts
-electron?: {
-    window?: Electron.BrowserWindow;
-    view?: Electron.BrowserView;
-};
-```
-
-When set, `client.initialize()`:
-
-1. Reads the remote debugging port that Chromium wrote to `<userData>/DevToolsActivePort` (the switch `--remote-debugging-port=0` is appended automatically at `require` time — that's why the library must be required before `app.whenReady()`);
-2. Connects Puppeteer to Electron's Chromium over CDP (`puppeteer.connect`), using your `puppeteer` client options as the base;
-3. Locates the Puppeteer `Page` that corresponds to your `BrowserWindow`/`BrowserView` and loads WhatsApp Web into it.
-
-Everything else — events, auth strategies, message APIs — behaves exactly like upstream whatsapp-web.js. If the `electron` option is not set, the library behaves identically to the original (spawning its own Chromium via Puppeteer), so it can also be used outside Electron.
+Take a look at [example.js][examples] for additional examples and use cases.  
+For more details on saving and restoring sessions, check out the [Authentication Strategies][auth-strategies].
 
 ### Migrating from puppeteer-in-electron (`page` option)
 
-Older versions of wwebjs-electron used `puppeteer-in-electron` and a `page` option. That approach is no longer needed:
+Older versions of wwebjs-electron relied on `puppeteer-in-electron` and a `page` option. That is no longer needed:
 
 ```diff
 - const pie = require('puppeteer-in-electron');
@@ -203,54 +206,63 @@ You can remove `puppeteer-core` and `puppeteer-in-electron` from your dependenci
 
 ## Supported features
 
-| Feature  | Status |
-| ------------- | ------------- |
-| Multi Device  | ✅  |
-| Send messages  | ✅  |
-| Receive messages  | ✅  |
-| Send media (images/audio/documents)  | ✅  |
-| Send media (video)  | ✅ [(requires Google Chrome)][google-chrome]  |
-| Send stickers | ✅ |
-| Receive media (images/audio/video/documents)  | ✅  |
-| Send contact cards | ✅ |
-| Send location | ✅ |
-| Send buttons | ❌  [(DEPRECATED)][deprecated-video] |
-| Send lists | ❌  [(DEPRECATED)][deprecated-video] |
-| Receive location | ✅ | 
-| Message replies | ✅ |
-| Join groups by invite  | ✅ |
-| Get invite for group  | ✅ |
-| Modify group info (subject, description)  | ✅  |
-| Modify group settings (send messages, edit info)  | ✅  |
-| Add group participants  | ✅  |
-| Kick group participants  | ✅  |
-| Promote/demote group participants | ✅ |
-| Mention users | ✅ |
-| Mention groups | ✅ |
-| Mute/unmute chats | ✅ |
-| Block/unblock contacts | ✅ |
-| Get contact info | ✅ |
-| Get profile pictures | ✅ |
-| Set user status message | ✅ |
-| React to messages | ✅ |
-| Create polls | ✅ |
-| Channels | ✅ |
-| Vote in polls | 🔜 |
-| Communities | 🔜 |
+| Feature                                          | Status                                       |
+| ------------------------------------------------ | -------------------------------------------- |
+| Multi Device                                     | ✅                                           |
+| Send messages                                    | ✅                                           |
+| Receive messages                                 | ✅                                           |
+| Send media (images/audio/documents)              | ✅                                           |
+| Send media (video)                               | ✅ [(requires Google Chrome)][google-chrome] |
+| Send stickers                                    | ✅                                           |
+| Receive media (images/audio/video/documents)     | ✅                                           |
+| Send contact cards                               | ✅                                           |
+| Send location                                    | ✅                                           |
+| Send buttons                                     | ❌ [(DEPRECATED)][deprecated-video]          |
+| Send lists                                       | ❌ [(DEPRECATED)][deprecated-video]          |
+| Receive location                                 | ✅                                           |
+| Message replies                                  | ✅                                           |
+| Join groups by invite                            | ✅                                           |
+| Get invite for group                             | ✅                                           |
+| Modify group info (subject, description)         | ✅                                           |
+| Modify group settings (send messages, edit info) | ✅                                           |
+| Add group participants                           | ✅                                           |
+| Kick group participants                          | ✅                                           |
+| Promote/demote group participants                | ✅                                           |
+| Mention users                                    | ✅                                           |
+| Mention groups                                   | ✅                                           |
+| Mute/unmute chats                                | ✅                                           |
+| Block/unblock contacts                           | ✅                                           |
+| Get contact info                                 | ✅                                           |
+| Get profile pictures                             | ✅                                           |
+| Set user status message                          | ✅                                           |
+| React to messages                                | ✅                                           |
+| Create polls                                     | ✅                                           |
+| Channels                                         | ✅                                           |
+| Vote in polls                                    | ✅                                           |
+| Communities                                      | 🔜                                           |
 
 Something missing? Make an issue and let us know!
 
-## Contributing
+## How it works
 
-Feel free to open pull requests; we welcome contributions! However, for significant changes, it's best to open an issue beforehand. Make sure to review our [contribution guidelines][contributing] before creating a pull request. Before creating your own issue or pull request, always check to see if one already exists!
+When required from an Electron main process, wwebjs-electron appends `--remote-debugging-port=0` to Chromium's command line. Once your app is ready, `initialize()`:
+
+1. Reads the debugging port Chromium wrote to `<userData>/DevToolsActivePort`;
+2. Connects Puppeteer to Electron's own Chromium over CDP (`puppeteer.connect` — no second browser is spawned);
+3. Finds the Puppeteer `Page` that corresponds to your `BrowserWindow`/`BrowserView` and loads WhatsApp Web into it.
+
+This project stays in sync with upstream [whatsapp-web.js][wwebjs] releases automatically — each release here mirrors the upstream release of the same version, with the Electron integration applied on top.
 
 ## Supporting the project
 
-You can support the maintainer of this project through the links below
+You can support the maintainer of the original whatsapp-web.js project through the links below:
 
 - [Support via GitHub Sponsors][gitHub-sponsors]
 - [Support via PayPal][support-payPal]
-- [Sign up for DigitalOcean][digitalocean] and get $200 in credit when you sign up (Referral)
+
+## Contributing
+
+Feel free to open pull requests; we welcome contributions! However, for significant changes, it's best to open an issue beforehand. Before creating your own issue or pull request, always check to see if one already exists!
 
 ## Disclaimer
 
@@ -258,34 +270,32 @@ This project is not affiliated, associated, authorized, endorsed by, or in any w
 
 ## License
 
-Copyright 2019 Pedro S Lopez  
+Copyright 2019 Pedro S Lopez
 
 Licensed under the Apache License, Version 2.0 (the "License");  
 you may not use this project except in compliance with the License.  
-You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0.  
+You may obtain a copy of the License at <https://www.apache.org/licenses/LICENSE-2.0>.
 
 Unless required by applicable law or agreed to in writing, software  
 distributed under the License is distributed on an "AS IS" BASIS,  
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  
 See the License for the specific language governing permissions and  
-limitations under the License.  
+limitations under the License.
 
-
-[website]: https://wwebjs.dev
+[wwebjs]: https://github.com/wwebjs/whatsapp-web.js
+[electron]: https://www.electronjs.org/
 [guide]: https://guide.wwebjs.dev/guide
 [guide-source]: https://github.com/wwebjs/wwebjs.dev/tree/main
 [documentation]: https://docs.wwebjs.dev/
-[documentation-source]: https://github.com/pedroslopez/whatsapp-web.js/tree/main/docs
-[discord]: https://discord.gg/H7DqQs4
-[gitHub]: https://github.com/pedroslopez/whatsapp-web.js
+[documentation-source]: https://github.com/wwebjs/whatsapp-web.js/tree/main/docs
+[discord]: https://discord.wwebjs.dev
+[gitHub]: https://github.com/AndyTargino/wwebjs-electron
 [npm]: https://npmjs.org/package/wwebjs-electron
 [nodejs]: https://nodejs.org/en/download/
-[examples]: https://github.com/pedroslopez/whatsapp-web.js/blob/master/example.js
+[examples]: https://github.com/AndyTargino/wwebjs-electron/blob/main/example.js
 [auth-strategies]: https://wwebjs.dev/guide/creating-your-bot/authentication.html
 [google-chrome]: https://wwebjs.dev/guide/creating-your-bot/handling-attachments.html#caveat-for-sending-videos-and-gifs
 [deprecated-video]: https://www.youtube.com/watch?v=hv1R1rLeVVE
-[gitHub-sponsors]: https://github.com/sponsors/pedroslopez
+[gitHub-sponsors]: https://github.com/sponsors/wwebjs
 [support-payPal]: https://www.paypal.me/psla/
-[digitalocean]: https://m.do.co/c/73f906a36ed4
-[contributing]: https://github.com/pedroslopez/whatsapp-web.js/blob/main/CODE_OF_CONDUCT.md
 [whatsapp]: https://whatsapp.com
