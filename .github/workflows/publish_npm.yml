@@ -1,15 +1,15 @@
 name: Publish to NPM
 
+# A release é criada pelo repositório de automação (wwebjs-electron-private),
+# que sincroniza o upstream whatsapp-web.js e aplica o patch Electron.
 on:
-  workflow_run:
-    workflows: ["Sync and Update"]
-    types:
-      - completed
+  release:
+    types: [published]
+  workflow_dispatch:
 
 jobs:
   publish_npm:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
     - name: Checkout repository

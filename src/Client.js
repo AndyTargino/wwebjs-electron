@@ -1,5 +1,10 @@
 'use strict';
 
+const {
+    getRemoteDebuggingPort,
+    matchPuppeteerPage,
+} = require('./util/Electron');
+
 const EventEmitter = require('events');
 const puppeteer = require('puppeteer');
 
@@ -55,6 +60,7 @@ const { exposeFunctionIfAbsent } = require('./util/Puppeteer');
  * @param {string} options.deviceName - Sets the device name of a current linked device., i.e.: 'TEST'.
  * @param {string} options.browserName - Sets the browser name of a current linked device, i.e.: 'Firefox'.
  * @param {object} options.proxyAuthentication - Proxy Authentication object.
+ * @param {object} options.electron - Attach to an existing Electron BrowserWindow or BrowserView instead of launching a Puppeteer managed browser. WhatsApp Web is loaded into the target by initialize().
  *
  * @fires Client#qr
  * @fires Client#authenticated
@@ -448,6 +454,24 @@ class Client extends EventEmitter {
 
         const puppeteerOpts = this.options.puppeteer;
         if (
+            this.options.electron &&
+            (this.options.electron.window || this.options.electron.view)
+        ) {
+            const port = await getRemoteDebuggingPort();
+            browser = await puppeteer.connect({
+                ...puppeteerOpts,
+                browserURL: `http://127.0.0.1:${port}`,
+                defaultViewport: null,
+            });
+            const target =
+                this.options.electron.window || this.options.electron.view;
+            page = await matchPuppeteerPage(browser, target);
+            if (!page) {
+                throw new Error(
+                    'Could not match the Electron window to a Puppeteer page.',
+                );
+            }
+        } else if (
             puppeteerOpts &&
             (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL)
         ) {

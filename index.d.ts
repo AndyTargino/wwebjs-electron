@@ -705,6 +705,18 @@ declare namespace WAWebJS {
 
     /** Options for initializing the whatsapp client */
     export interface ClientOptions {
+        /**
+         * When set, attaches to an existing Electron BrowserWindow or BrowserView
+         * instead of spawning a Puppeteer managed browser. WhatsApp Web is loaded
+         * into the target by `initialize()`.
+         *
+         * The library must be `require`d before `app.whenReady()` so that
+         * Chromium's remote debugging switch can be appended in time.
+         */
+        electron?: {
+            window?: import('electron').BrowserWindow;
+            view?: import('electron').BrowserView;
+        };
         /** Timeout for authentication selector in puppeteer
          * @default 0 */
         authTimeoutMs?: number;

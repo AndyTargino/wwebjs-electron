@@ -16,7 +16,7 @@
 ## About
 **A WhatsApp API client optimized for Electron applications**
 
-wwebjs-electron is a fork of whatsapp-web.js specifically optimized for use with Electron applications. It works seamlessly with puppeteer-in-electron to provide a native desktop WhatsApp experience. The library connects through WhatsApp Web using Puppeteer within Electron's BrowserView, providing access to all WhatsApp Web features while maintaining the security and performance benefits of Electron.
+wwebjs-electron is a fork of whatsapp-web.js with native support for Electron host applications. It embeds WhatsApp Web directly inside an Electron `BrowserWindow` or `BrowserView` — without spawning a separate Chromium instance and without relying on `puppeteer-in-electron`. Puppeteer attaches to Electron's own Chromium over CDP (Chrome DevTools Protocol), providing access to all WhatsApp Web features while maintaining the security and performance benefits of Electron.
 
 > [!IMPORTANT]
 > **It is not guaranteed you will not be blocked by using this method. WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe.**
@@ -34,13 +34,10 @@ wwebjs-electron is a fork of whatsapp-web.js specifically optimized for use with
 
 The module is now available on npm! `npm i wwebjs-electron`
 
-### Required Dependencies for Electron Integration
+No extra dependencies are needed for Electron integration — `puppeteer-in-electron` and `puppeteer-core` are **not** required anymore.
 
-For proper Electron integration, you also need to install these dependencies:
-
-```bash
-npm i wwebjs-electron puppeteer-core puppeteer-in-electron
-```
+> [!TIP]
+> The bundled `puppeteer` dependency downloads a standalone Chromium (~170MB) during `npm install`. That browser is only used in standalone mode (outside Electron) — when the `electron` option is set, the client attaches to Electron's own Chromium instead. If your app only runs inside Electron, you can skip the download by setting the environment variable `PUPPETEER_SKIP_DOWNLOAD=true` before `npm install` (or via a `.puppeteerrc.cjs` with `{ skipDownload: true }`).
 
 > [!NOTE]
 > **Node ``v18+`` is required.**
@@ -78,14 +75,13 @@ sudo apt-get install -y nodejs
 
 ### Basic Electron Implementation
 
+> [!IMPORTANT]
+> `wwebjs-electron` must be `require`d in your **main process before `app.whenReady()`**, so Chromium's remote debugging switch can be appended in time.
+
 ```js
+// Require wwebjs-electron BEFORE app.whenReady() (top of your main process file)
 const { app, BrowserWindow, BrowserView } = require('electron');
 const { Client, LocalAuth } = require('wwebjs-electron');
-const pie = require('puppeteer-in-electron');
-const puppeteer = require('puppeteer-core');
-
-// Initialize puppeteer-in-electron
-pie.initialize(app);
 
 app.whenReady().then(async () => {
     // Create main window
@@ -98,30 +94,27 @@ app.whenReady().then(async () => {
         }
     });
 
-    // Connect browser
-    const browser = await pie.connect(app, puppeteer);
-
     // Create BrowserView for WhatsApp
     const whatsappView = new BrowserView({
         webPreferences: {
             nodeIntegration: false,
-            contextIsolation: true,
-            webSecurity: false
+            contextIsolation: true
         }
     });
 
-    // Get Puppeteer page from BrowserView
-    const page = await pie.getPage(browser, whatsappView);
+    // Add BrowserView to window
+    mainWindow.addBrowserView(whatsappView);
+    mainWindow.setBrowserView(whatsappView);
 
-    // Set user agent
-    await page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-    );
+    // Set BrowserView bounds
+    const { width, height } = mainWindow.getContentBounds();
+    whatsappView.setBounds({ x: 0, y: 0, width, height });
 
-    // Create WhatsApp client using the Puppeteer page
+    // Create WhatsApp client attached to the BrowserView
+    // (you can also pass a whole window: electron: { window: mainWindow })
     const client = new Client({
         authStrategy: new LocalAuth(),
-        page: page
+        electron: { view: whatsappView }
     });
 
     client.on('qr', (qr) => {
@@ -139,15 +132,7 @@ app.whenReady().then(async () => {
         }
     });
 
-    // Add BrowserView to window
-    mainWindow.addBrowserView(whatsappView);
-    mainWindow.setBrowserView(whatsappView);
-    
-    // Set BrowserView bounds
-    const { width, height } = mainWindow.getContentBounds();
-    whatsappView.setBounds({ x: 0, y: 0, width, height });
-
-    // Initialize client
+    // Initialize client — WhatsApp Web is loaded into the BrowserView
     await client.initialize();
 });
 ```
@@ -183,43 +168,38 @@ For further details on saving and restoring sessions, explore the provided [Auth
 
 ## Key Differences from whatsapp-web.js
 
-wwebjs-electron provides several enhancements specifically designed for Electron applications:
+wwebjs-electron adds a single `electron` option to `ClientOptions`:
 
-- **Native Electron Integration**: Works seamlessly with Electron's BrowserView and BrowserWindow
-- **puppeteer-in-electron Support**: Optimized to work with puppeteer-in-electron for better performance
-- **Enhanced Security**: Maintains Electron's security model while providing full WhatsApp functionality  
-- **Desktop-First Design**: Built specifically for desktop applications rather than web browsers
-- **Improved Resource Management**: Better memory and CPU usage in Electron environments
-- **Custom User Agent Support**: Easy configuration for desktop-specific user agents
-
-### Installation with Electron
-
-1. Install the required packages:
-   ```bash
-   npm install wwebjs-electron puppeteer-core puppeteer-in-electron
-   ```
-
-2. Initialize puppeteer-in-electron in your main process:
-   ```js
-   const pie = require('puppeteer-in-electron');
-   pie.initialize(app);
-   ```
-
-3. Use the provided Electron integration pattern as shown in the examples above.
-
-### Recommended Versions
-
-For optimal compatibility, use these specific versions:
-
-```json
-{
-  "wwebjs-electron": "^1.33.2",
-  "puppeteer-core": "^24.19.0", 
-  "puppeteer-in-electron": "^3.0.5"
-}
+```ts
+electron?: {
+    window?: Electron.BrowserWindow;
+    view?: Electron.BrowserView;
+};
 ```
 
-These versions have been tested together and provide the most stable experience.
+When set, `client.initialize()`:
+
+1. Reads the remote debugging port that Chromium wrote to `<userData>/DevToolsActivePort` (the switch `--remote-debugging-port=0` is appended automatically at `require` time — that's why the library must be required before `app.whenReady()`);
+2. Connects Puppeteer to Electron's Chromium over CDP (`puppeteer.connect`), using your `puppeteer` client options as the base;
+3. Locates the Puppeteer `Page` that corresponds to your `BrowserWindow`/`BrowserView` and loads WhatsApp Web into it.
+
+Everything else — events, auth strategies, message APIs — behaves exactly like upstream whatsapp-web.js. If the `electron` option is not set, the library behaves identically to the original (spawning its own Chromium via Puppeteer), so it can also be used outside Electron.
+
+### Migrating from puppeteer-in-electron (`page` option)
+
+Older versions of wwebjs-electron used `puppeteer-in-electron` and a `page` option. That approach is no longer needed:
+
+```diff
+- const pie = require('puppeteer-in-electron');
+- const puppeteer = require('puppeteer-core');
+- pie.initialize(app);
+- const browser = await pie.connect(app, puppeteer);
+- const page = await pie.getPage(browser, whatsappView);
+- const client = new Client({ authStrategy: new LocalAuth(), page });
++ const client = new Client({ authStrategy: new LocalAuth(), electron: { view: whatsappView } });
+```
+
+You can remove `puppeteer-core` and `puppeteer-in-electron` from your dependencies.
 
 ## Supported features
 

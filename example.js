@@ -18,6 +18,13 @@ const client = new Client({
         // args: ['--proxy-server=proxy-server-that-requires-authentication.example.com'],
         headless: false,
     },
+    /**
+     * Embed WhatsApp Web inside an Electron BrowserWindow or BrowserView
+     * instead of launching a separate Chromium instance. wwebjs-electron must
+     * be required before app.whenReady() so the Chromium remote debugging
+     * switch can be appended in time.
+     */
+    // electron: { window: mainWindow }, // or { view: browserView }
     // pairWithPhoneNumber: {
     //     phoneNumber: '96170100100' // Pair with phone number (format: <COUNTRY_CODE><PHONE_NUMBER>)
     //     showNotification: true,
