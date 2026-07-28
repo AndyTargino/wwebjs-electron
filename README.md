@@ -43,6 +43,19 @@ pnpm add wwebjs-electron
 
 No extra dependencies are needed: `puppeteer-in-electron` and `puppeteer-core` are **not** required.
 
+### Release channels
+
+whatsapp-web.js publishes stable releases at a slow pace, but its `main` branch moves almost daily. wwebjs-electron mirrors both:
+
+| Channel | Install | Mirrors | Example version |
+| ------- | ------- | ------- | --------------- |
+| Stable | `npm install wwebjs-electron` | the latest whatsapp-web.js **release** | `1.34.7` |
+| Beta | `npm install wwebjs-electron@beta` | the whatsapp-web.js **`main` branch** | `1.34.8-beta.1` |
+
+A beta is a pre-release of the *next* patch version, so it always sorts above the current stable one, and the real release replaces it as soon as upstream ships it. Standard ranges such as `^1.34.7` never resolve to a beta, so you only get one if you ask for it explicitly. Betas carry upstream code that has not been through a release yet: handy to pick up a fix early, not recommended for production.
+
+The stable code lives on the [`main`](https://github.com/AndyTargino/wwebjs-electron/tree/main) branch and the beta code on the [`beta`](https://github.com/AndyTargino/wwebjs-electron/tree/beta) branch.
+
 > [!TIP]
 > The bundled `puppeteer` dependency downloads a standalone Chromium (~170MB) during `npm install`. It is only used in standalone mode (outside Electron); inside Electron the client attaches to Electron's own Chromium. If your app only runs inside Electron, skip the download with the environment variable `PUPPETEER_SKIP_DOWNLOAD=true` (or a `.puppeteerrc.cjs` with `{ skipDownload: true }`).
 
