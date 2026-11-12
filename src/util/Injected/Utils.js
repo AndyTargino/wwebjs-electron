@@ -483,6 +483,12 @@ exports.LoadUtils = () => {
             ...extraOptions,
         };
 
+        // MediaData is a model whose private __x_id field collides with Msg's
+        // internal id field when its enumerable properties are spread above,
+        // breaking getValidatedSender() during Msg initialization.
+        if (message.__x_id) {
+            delete message.__x_id;
+        }
         // Bot's won't reply if canonicalUrl is set (linking)
         if (botOptions) {
             delete message.canonicalUrl;
@@ -582,7 +588,7 @@ exports.LoadUtils = () => {
 
         return window
             .require('WAWebCollections')
-            .Msg.get(newMsgKey._serialized);
+            .Msg.get(newMsgKey._serialized || newMsgKey.$1);
     };
 
     window.WWebJS.editMessage = async (msg, content, options = {}) => {
@@ -625,7 +631,9 @@ exports.LoadUtils = () => {
         await window
             .require('WAWebSendMessageEditAction')
             .sendMessageEdit(msg, content, internalOptions);
-        return window.require('WAWebCollections').Msg.get(msg.id._serialized);
+        return window
+            .require('WAWebCollections')
+            .Msg.get(msg.id._serialized || msg.id.$1);
     };
 
     window.WWebJS.toStickerData = async (mediaInfo) => {
@@ -830,8 +838,14 @@ exports.LoadUtils = () => {
 
         if (typeof msg.id.remote === 'object') {
             msg.id = Object.assign({}, msg.id, {
-                remote: msg.id.remote._serialized,
+                remote: msg.id.remote._serialized || msg.id.remote.$1,
             });
+        }
+
+        // WhatsApp Web changed _serialized to $1 in message IDs (2026-07 update).
+        // Normalize here so all downstream Node.js code can keep using _serialized.
+        if (msg.id && msg.id._serialized == null && msg.id.$1 != null) {
+            msg.id = Object.assign({}, msg.id, { _serialized: msg.id.$1 });
         }
 
         delete msg.pendingAckUpdate;
@@ -953,7 +967,7 @@ exports.LoadUtils = () => {
             model.isGroup = true;
             const chatWid = window
                 .require('WAWebWidFactory')
-                .createWid(chat.id._serialized);
+                .createWid(chat.id._serialized || chat.id.$1);
             const groupMetadata =
                 window.require('WAWebCollections').GroupMetadata ||
                 window.require('WAWebCollections').WAWebGroupMetadataCollection;
@@ -981,16 +995,17 @@ exports.LoadUtils = () => {
 
         model.lastMessage = null;
         if (model.msgs && model.msgs.length) {
-            const lastMessage = chat.lastReceivedKey
+            const _lastReceivedKeyId = chat.lastReceivedKey
+                ? chat.lastReceivedKey._serialized || chat.lastReceivedKey.$1
+                : null;
+            const lastMessage = _lastReceivedKeyId
                 ? window
                       .require('WAWebCollections')
-                      .Msg.get(chat.lastReceivedKey._serialized) ||
+                      .Msg.get(_lastReceivedKeyId) ||
                   (
                       await window
                           .require('WAWebCollections')
-                          .Msg.getMessagesById([
-                              chat.lastReceivedKey._serialized,
-                          ])
+                          .Msg.getMessagesById([_lastReceivedKeyId])
                   )?.messages?.[0]
                 : null;
             lastMessage &&
@@ -1103,6 +1118,63 @@ exports.LoadUtils = () => {
             type: mimetype,
             lastModified: Date.now(),
         });
+    };
+
+    /**
+     * Resolves the media blob and metadata for a message.
+     * Shared by downloadMedia and downloadMediaStream.
+     * @param {string} msgId
+     * @returns {Promise<{blob: Blob, mimetype: string, filename: string, filesize: number}|null>}
+     */
+    window.WWebJS.resolveMediaBlob = async (msgId) => {
+        const { Msg } = window.require('WAWebCollections');
+        const msg =
+            Msg.get(msgId) ||
+            (await Msg.getMessagesById([msgId]))?.messages?.[0];
+
+        if (
+            !msg ||
+            !msg.mediaData ||
+            msg.mediaData.mediaStage === 'REUPLOADING'
+        ) {
+            return null;
+        }
+
+        // Always call internal downloadMedia - never skip based on
+        // mediaStage, because cache eviction can leave stage=RESOLVED
+        // with empty InMemoryMediaBlobCache.
+        await msg.downloadMedia({
+            downloadEvenIfExpensive: true,
+            rmrReason: 1,
+            isUserInitiated: true,
+        });
+
+        if (
+            msg.mediaData.mediaStage.includes('ERROR') ||
+            msg.mediaData.mediaStage === 'FETCHING'
+        ) {
+            return null;
+        }
+
+        const cached = window
+            .require('WAWebMediaInMemoryBlobCache')
+            .InMemoryMediaBlobCache.get(msg.mediaObject?.filehash);
+
+        let blob;
+        if (cached) {
+            blob = cached;
+        } else if (msg.mediaObject?.mediaBlob) {
+            blob = msg.mediaObject.mediaBlob.forceToBlob();
+        }
+
+        if (!blob) return null;
+
+        return {
+            blob,
+            mimetype: msg.mimetype,
+            filename: msg.filename,
+            filesize: msg.size,
+        };
     };
 
     window.WWebJS.arrayBufferToBase64 = (arrayBuffer) => {
@@ -1263,9 +1335,10 @@ exports.LoadUtils = () => {
     };
 
     window.WWebJS.rejectCall = async (peerJid, id) => {
-        let userId = window
+        const _meUser = window
             .require('WAWebUserPrefsMeUser')
-            .getMaybeMePnUser()._serialized;
+            .getMaybeMePnUser();
+        let userId = _meUser._serialized || _meUser.$1;
 
         const stanza = window.require('WAWap').wap(
             'call',
@@ -1575,9 +1648,12 @@ exports.LoadUtils = () => {
                                       .membershipRequestsActionRejectParticipantMixins
                                       ?.value.error;
                             return {
-                                requesterId: window
-                                    .require('WAWebWidFactory')
-                                    .createWid(p.jid)._serialized,
+                                requesterId: (() => {
+                                    const _w = window
+                                        .require('WAWebWidFactory')
+                                        .createWid(p.jid);
+                                    return _w._serialized || _w.$1;
+                                })(),
                                 ...(error
                                     ? {
                                           error: +error,
@@ -1594,11 +1670,15 @@ exports.LoadUtils = () => {
                     }
                 } else {
                     result.push({
-                        requesterId: window
-                            .require('WAWebJidToWid')
-                            .userJidToUserWid(
-                                participant.participantArgs[0].participantJid,
-                            )._serialized,
+                        requesterId: (() => {
+                            const _w = window
+                                .require('WAWebJidToWid')
+                                .userJidToUserWid(
+                                    participant.participantArgs[0]
+                                        .participantJid,
+                                );
+                            return _w._serialized || _w.$1;
+                        })(),
                         message: 'ServerStatusCodeError',
                     });
                 }
