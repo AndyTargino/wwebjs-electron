@@ -26,7 +26,7 @@ class Contact extends Base {
          * ID that represents the contact
          * @type {ContactId}
          */
-        this.id = data.id;
+        this.id = Base._normalizeId(data.id);
 
         /**
          * Contact's phone number
@@ -158,15 +158,20 @@ class Contact extends Base {
             const contact = await window
                 .require('WAWebCollections')
                 .Contact.find(contactId);
-            const resolved = window
-                .require('WAWebBlockContactUtils')
-                .getContactToBlockOnlyUseIfNoAssociatedChat(
-                    contact,
-                    'ChatListBlock',
-                );
-            await window
-                .require('WAWebBlockContactAction')
-                .blockContact({ contact: resolved });
+            const lid = contact.id.isLid()
+                ? contact.id
+                : window
+                      .require('WAWebApiContact')
+                      .getAlternateUserWid(contact.id);
+            const ContactToBlock = {
+                id: lid,
+                isContactBlocked: false,
+                phoneNumber: null,
+            };
+            await window.require('WAWebBlockContactAction').blockContact({
+                contact: ContactToBlock,
+                blockEntryPoint: 'ChatListBlock',
+            });
         }, this.id._serialized);
 
         this.isBlocked = true;
@@ -181,18 +186,21 @@ class Contact extends Base {
         if (this.isGroup) return false;
 
         await this.client.pupPage.evaluate(async (contactId) => {
-            const contact = await window
+            let contact = await window
                 .require('WAWebCollections')
                 .Contact.find(contactId);
-            const resolved = window
-                .require('WAWebBlockContactUtils')
-                .getContactToBlockOnlyUseIfNoAssociatedChat(
-                    contact,
-                    'ChatListBlock',
-                );
+            if (!contact.id.isLid()) {
+                const lid = window
+                    .require('WAWebApiContact')
+                    .getAlternateUserWid(contact.id);
+
+                contact = await window
+                    .require('WAWebCollections')
+                    .Contact.find(lid._serialized || lid.$1);
+            }
             await window
                 .require('WAWebBlockContactAction')
-                .unblockContact(resolved);
+                .unblockContact(contact, 'ChatListBlock');
         }, this.id._serialized);
 
         this.isBlocked = false;
